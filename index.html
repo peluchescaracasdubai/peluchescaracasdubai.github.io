@@ -609,7 +609,9 @@
             </div>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    
     <script>
         const credenciales = {
             "Saul": "4rgentina", "Jorge": "3spaña", "Osmel": "8rasil",
@@ -1304,6 +1306,28 @@ function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
             "Francia": ["25/06 vs Canadá 🏟️ Vancouver", "29/06 Octavos de Final ⏰ Confirmar"]
         };
 
+
+
+
+        // --- CONEXIÓN A SUPABASE ---
+const supabaseUrl = 'PEGA_AQUI_TU_PROJECT_URL';
+const supabaseKey = 'PEGA_AQUI_TU_ANON_KEY';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// --- FUNCIÓN PARA DESCARGAR DATOS DE LA NUBE ---
+async function sincronizarQuinielasDeLaNube() {
+    // Descargamos todo lo que está en la tabla 'quinielas'
+    const { data, error } = await supabase.from('quinielas').select('*');
+    
+    if (data) {
+        // Actualizamos nuestro localStorage con lo que viene de la nube
+        data.forEach(fila => {
+            localStorage.setItem(`quiniela_${fila.usuario}`, JSON.stringify(fila.predicciones));
+        });
+        // Recalculamos la tabla para ver los puntos en tiempo real
+        actualizarTablaGeneral();
+    }
+}
         const poolMascotas = ["m1.png", "m2.png", "m3.png"];
         let mascotaAsignadaSesion = "m1.png";
 
@@ -1495,9 +1519,11 @@ function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
                 dibujarAlineacionCancha();
                 actualizarTablaGeneral();
                 renderizarArbolBanderas();
+                sincronizarQuinielasDeLaNube(); // <-- Agrega esta línea aquí
 
                 actualizarTitularesNoticiero();
                 setInterval(actualizarTitularesNoticiero, 45000);
+                setInterval(sincronizarQuinielasDeLaNube, 45000); // <-- Agrega esta línea aquí
             } else {
                 errorMsg.style.display = 'block';
             }
@@ -1644,19 +1670,31 @@ function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
             }
         }
 
-        function guardarMiQuiniela() {
-            let misPredicciones = {};
-            Object.keys(gruposMundial).forEach(letra => {
-                const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
-                const seg = document.getElementById(`mod-grupo-${letra}-2do`).value;
-                misPredicciones[letra] = { "1ro": prim, "2do": seg };
-            });
+async function guardarMiQuiniela() {
+    let misPredicciones = {};
+    Object.keys(gruposMundial).forEach(letra => {
+        const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
+        const seg = document.getElementById(`mod-grupo-${letra}-2do`).value;
+        misPredicciones[letra] = { "1ro": prim, "2do": seg };
+    });
 
-            localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
-            alert("¡Tus predicciones se guardaron!");
-            cerrarModal();
-            actualizarTablaGeneral();
-        }
+    // 1. Guardado local rápido
+    localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
+    
+    // 2. Subida a la nube de Supabase (Upsert actualiza si ya existe, crea si es nuevo)
+    const { error } = await supabase
+        .from('quinielas')
+        .upsert({ usuario: usuarioLogueado, predicciones: misPredicciones }, { onConflict: 'usuario' });
+
+    if (error) {
+        alert("Hubo un error al subir a la nube: " + error.message);
+    } else {
+        alert("¡Tus predicciones se guardaron en la nube para todos tus amigos!");
+    }
+
+    cerrarModal();
+    sincronizarQuinielasDeLaNube(); // Actualizamos la tabla general
+}
 
         function cerrarModal() { document.getElementById('modal-q').style.display = "none"; }
 
