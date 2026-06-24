@@ -655,63 +655,79 @@
             "K": { "1ro": "Senegal", "2do": "Serbia" }, "L": { "1ro": "Suecia", "2do": "Polonia" }
         };
 
-        // --- DATA DE LA RED ELIMINATORIA REAL (Modifica los países según los resultados diarios) ---
-        const llaveEliminatoriaReal = {
-            izq: {
-                octavos: ["Argentina", "Francia", "Marruecos", "Canadá", "España", "Alemania", "Japón", "Ecuador"],
-                cuartos: ["Argentina", "Francia", "España", "Alemania"],
-                semi: ["Argentina", "España"],
-                finalista: "Argentina"
-            },
-            der: {
-                octavos: ["Brasil", "Portugal", "Italia", "Bélgica", "Uruguay", "Inglaterra", "Suecia", "Polonia"],
-                cuartos: ["Brasil", "Italia", "Uruguay", "Suecia"],
-                semi: ["Brasil", "Uruguay"],
-                finalista: "Brasil"
-            },
-            campeon: "Argentina"
-        };
+// --- DATA DE LA RED ELIMINATORIA REAL (Deja vacío lo que aún no se ha jugado) ---
+const llaveEliminatoriaReal = {
+    izq: {
+        // Pon aquí los 8 clasificados de este lado a medida que se conozcan
+        octavos: ["", "", "", "", "", "", "", ""], 
+        cuartos: ["", "", "", ""],
+        semi: ["", ""],
+        finalista: ""
+    },
+    der: {
+        // Pon aquí los 8 clasificados del otro lado a medida que se conozcan
+        octavos: ["", "", "", "", "", "", "", ""],
+        cuartos: ["", "", "", ""],
+        semi: ["", ""],
+        finalista: ""
+    },
+    campeon: "" // Nombre del país campeón al final del mundial
+};
+function renderizarArbolBanderas() {
+    // Lado Izquierdo
+    inyectarBanderasColumna('b-izq-octavos', llaveEliminatoriaReal.izq.octavos, 2);
+    inyectarBanderasColumna('b-izq-cuartos', llaveEliminatoriaReal.izq.cuartos, 2);
+    inyectarBanderasColumna('b-izq-semi', llaveEliminatoriaReal.izq.semi, 1);
 
-        function renderizarArbolBanderas() {
-            // Lado Izquierdo
-            inyectarBanderasColumna('b-izq-octavos', llaveEliminatoriaReal.izq.octavos, 2);
-            inyectarBanderasColumna('b-izq-cuartos', llaveEliminatoriaReal.izq.cuartos, 2);
-            inyectarBanderasColumna('b-izq-semi', llaveEliminatoriaReal.izq.semi, 1);
+    // Centro (Finalistas)
+    const centroFinal = document.getElementById('b-centro-final');
+    if (centroFinal) {
+        const flagIzq = banderasPaises[llaveEliminatoriaReal.izq.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.izq.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
+        const flagDer = banderasPaises[llaveEliminatoriaReal.der.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.der.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
+        centroFinal.innerHTML = `${flagIzq} <span style="color:white; font-weight:bold; font-size:11px;">VS</span> ${flagDer}`;
+    }
 
-            // Centro (Finalistas y Campeón)
-            document.getElementById('b-centro-final').innerHTML = `
-                <img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.izq.finalista]}.svg">
-                <span style="color:white; font-weight:bold; font-size:11px;">VS</span>
-                <img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.der.finalista]}.svg">
-            `;
-            document.getElementById('b-centro-campeon').innerHTML = `
-                <img class="bandera-bracket" style="width:45px; height:30px; border:2px solid gold;" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.campeon]}.svg">
-            `;
+    // Centro (Campeón)
+    const centroCampeon = document.getElementById('b-centro-campeon');
+    if (centroCampeon) {
+        centroCampeon.innerHTML = banderasPaises[llaveEliminatoriaReal.campeon] ? 
+            `<img class="bandera-bracket" style="width:45px; height:30px; border:2px solid gold;" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.campeon]}.svg">` : 
+            `<div class="bandera-bracket" style="width:45px; height:30px; background:rgba(255,255,255,0.1); border:1px dashed var(--dorado);"></div>`;
+    }
 
-            // Lado Derecho
-            inyectarBanderasColumna('b-der-semi', llaveEliminatoriaReal.der.semi, 1);
-            inyectarBanderasColumna('b-der-cuartos', llaveEliminatoriaReal.der.cuartos, 2);
-            inyectarBanderasColumna('b-der-octavos', llaveEliminatoriaReal.der.octavos, 2);
-        }
+    // Lado Derecho
+    inyectarBanderasColumna('b-der-semi', llaveEliminatoriaReal.der.semi, 1);
+    inyectarBanderasColumna('b-der-cuartos', llaveEliminatoriaReal.der.cuartos, 2);
+    inyectarBanderasColumna('b-der-octavos', llaveEliminatoriaReal.der.octavos, 2);
+}
 
-        function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
-            const col = document.getElementById(idContenedor);
-            if (!col) return;
-            col.innerHTML = "";
-            for (let i = 0; i < listaPaises.length; i += agruparPor) {
-                const bloque = document.createElement('div');
-                bloque.classList.add('pareja-bloque');
-                for (let j = 0; j < agruparPor; j++) {
-                    if (listaPaises[i + j]) {
-                        const img = document.createElement('img');
-                        img.classList.add('bandera-bracket');
-                        img.src = `https://flagcdn.com/${banderasPaises[listaPaises[i + j]]}.svg`;
-                        bloque.appendChild(img);
-                    }
-                }
-                col.appendChild(bloque);
+function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
+    const col = document.getElementById(idContenedor);
+    if (!col) return;
+    col.innerHTML = "";
+    for (let i = 0; i < listaPaises.length; i += agruparPor) {
+        const bloque = document.createElement('div');
+        bloque.classList.add('pareja-bloque');
+        for (let j = 0; j < agruparPor; j++) {
+            const pais = listaPaises[i + j];
+            const item = document.createElement('div');
+            
+            if (pais && banderasPaises[pais]) {
+                const img = document.createElement('img');
+                img.classList.add('bandera-bracket');
+                img.src = `https://flagcdn.com/${banderasPaises[pais]}.svg`;
+                bloque.appendChild(img);
+            } else {
+                // Si está vacío, dibuja un recuadro oscuro estético de reserva
+                const slotVacio = document.createElement('div');
+                slotVacio.classList.add('bandera-bracket');
+                slotVacio.style.background = "rgba(255,255,255,0.05)";
+                bloque.appendChild(slotVacio);
             }
         }
+        col.appendChild(bloque);
+    }
+}
 
         // BASE DE DATOS COMPLETA DE LOS 48 PAÍSES (10 DATOS EXACTOS CADA UNO)
         const poolCuriosidades = {
