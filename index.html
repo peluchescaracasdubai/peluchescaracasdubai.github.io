@@ -56,10 +56,12 @@
             </div>
 
             <button onclick="abrirModalMenuFases(true)" style="width: 100%; margin-bottom: 15px;">📝 Editar Mi Quiniela</button>
+            <button id="btn-toggle-juego" onclick="toggleJuego()" style="width: 100%; margin-bottom: 15px; background: #005A9C;">🎮 Jugar Minijuego</button>
             <button onclick="cerrarSesion()" class="btn-salir">🚪 Cerrar Aplicación</button>
         </aside>
 
         <main class="area-central">
+            <iframe id="frame-juego" src="juego.html" style="display:none; width:100%; height:100%; border:none; border-radius: 12px; z-index: 50; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></iframe>
             <div class="bloque-superior-juego">
                 <div class="cancha-futbol" id="cancha"></div>
 
