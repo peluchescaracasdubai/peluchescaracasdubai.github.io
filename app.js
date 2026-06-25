@@ -433,3 +433,28 @@ function cerrarSesion() {
     document.getElementById('seccion-dashboard').style.display = 'none';
     document.getElementById('seccion-login').style.display = 'block';
 }
+
+// --- LÓGICA DEL MINIJUEGO DE FÚTBOL ---
+let juegoVisible = false;
+
+function toggleJuego() {
+    const bloqueJuego = document.getElementById('frame-juego');
+    const bloqueCancha = document.querySelector('.bloque-superior-juego');
+    const btnJuego = document.getElementById('btn-toggle-juego');
+
+    if (!juegoVisible) {
+        // Esconder quiniela, mostrar juego
+        bloqueCancha.style.display = 'none';
+        bloqueJuego.style.display = 'block';
+        btnJuego.innerText = '⚽ Volver a la Quiniela';
+        btnJuego.style.background = '#cc2424'; // Se pone rojo
+        juegoVisible = true;
+    } else {
+        // Esconder juego, mostrar quiniela
+        bloqueCancha.style.display = 'block';
+        bloqueJuego.style.display = 'none';
+        btnJuego.innerText = '🎮 Jugar Minijuego';
+        btnJuego.style.background = '#005A9C'; // Vuelve a ser azul
+        juegoVisible = false;
+    }
+}
