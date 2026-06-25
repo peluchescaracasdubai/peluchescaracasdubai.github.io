@@ -59,20 +59,24 @@ function cargarDatosPerfil() {
     actualizarEquipoFavorito(favGuardado);
 }
 
+// --- CORREGIDO: ENVÍA EL ADJUNTO REAL EN LUGAR DE BASE64 ---
 function procesarFoto(event) {
-    const lector = new FileReader();
-    lector.onload = function() {
-        localStorage.setItem(`foto_${usuarioLogueado}`, lector.result);
-        document.getElementById('mi-avatar').src = lector.result;
-        
-        // --- ENVÍA LA FOTO A LA NUBE (DATABASE.JS) ---
-        if (typeof subirFotoALaNube === 'function') {
-            subirFotoALaNube(usuarioLogueado, lector.result);
-        }
-        
-        dibujarAlineacionCancha();
+    const archivoImagen = event.target.files[0];
+    if (!archivoImagen) return;
+
+    // 1. Mostrar vista previa inmediata en pantalla de forma local
+    const urlLocal = URL.createObjectURL(archivoImagen);
+    document.getElementById('mi-avatar').src = urlLocal;
+    
+    // 2. Enviar el archivo binario real directamente al Storage de Supabase
+    if (typeof subirFotoALaNube === 'function') {
+        subirFotoALaNube(usuarioLogueado, archivoImagen);
     }
-    lector.readAsDataURL(event.target.files[0]);
+    
+    // 3. Redibujar la cancha localmente
+    setTimeout(() => {
+        if (typeof dibujarAlineacionCancha === 'function') dibujarAlineacionCancha();
+    }, 500);
 }
 
 function actualizarEquipoFavorito(pais) {
