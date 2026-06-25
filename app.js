@@ -442,19 +442,25 @@ function toggleJuego() {
     const bloqueCancha = document.querySelector('.bloque-superior-juego');
     const btnJuego = document.getElementById('btn-toggle-juego');
 
-    if (!juegoVisible) {
-        // Esconder quiniela, mostrar juego
+    juegoVisible = !juegoVisible;
+
+    if (juegoVisible) {
+        // 1. Le inyectamos el archivo para que cargue e inicie el juego justo ahora
+        bloqueJuego.src = "juego.html"; 
+        
+        // 2. Cambios visuales
         bloqueCancha.style.display = 'none';
         bloqueJuego.style.display = 'block';
-        btnJuego.innerText = '⚽ Volver a la Quiniela';
-        btnJuego.style.background = '#cc2424'; // Se pone rojo
-        juegoVisible = true;
+        btnJuego.innerText = '⚽ Volver a la Quiniela Peluchón!! ';
+        btnJuego.style.background = '#cc2424'; 
     } else {
-        // Esconder juego, mostrar quiniela
+        // 1. Lo volvemos a vaciar para que el juego se destruya y la música se apague al instante
+        bloqueJuego.removeAttribute('src'); 
+        
+        // 2. Cambios visuales
         bloqueCancha.style.display = 'block';
         bloqueJuego.style.display = 'none';
         btnJuego.innerText = '🎮 Jugar Minijuego';
-        btnJuego.style.background = '#005A9C'; // Vuelve a ser azul
-        juegoVisible = false;
+        btnJuego.style.background = '#005A9C'; 
     }
 }
