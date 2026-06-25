@@ -357,7 +357,7 @@ function actualizarTitularesNoticiero() {
             else titularesValidos.push(`👑 Rey de la cancha: ${lider.nombre} domina el primer puesto en solitario. Los demás están remando en el barro.`);
         } 
         if (lider.datos.total === segundo.datos.total) {
-            const empatados Lideres = listaOrdenada.filter(amigo => amigo.datos.total === lider.datos.total).map(amigo => amigo.nombre);
+            const empatadosLideres = listaOrdenada.filter(amigo => amigo.datos.total === lider.datos.total).map(amigo => amigo.nombre);
             titularesValidos.push(`⚠️ ¡Tremendo bonche en la punta! Tenemos un empate técnico entre ${empatadosLideres.join(' y ')} con ${lider.datos.total} puntos.`);
         }
         for (let i = 1; i < listaOrdenada.length - 1; i++) {
