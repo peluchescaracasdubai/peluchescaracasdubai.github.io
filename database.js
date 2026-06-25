@@ -1,7 +1,9 @@
 // --- CONEXIÓN DE SEGURIDAD ---
 const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
 const supabaseKey = 'sb_publishable_s0eLXKp2okSYwppwrQvEVw_JNMKCIKw';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// CAMBIAMOS EL NOMBRE AQUÍ PARA QUE NO CHOQUE:
+const clientSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- 1. DESCARGAR TODO DESDE LA NUBE ---
 async function sincronizarTodoDesdeLaNube() {
