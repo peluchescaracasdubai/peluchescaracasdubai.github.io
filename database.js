@@ -1,6 +1,6 @@
 // --- CONEXIÓN DE SEGURIDAD A SUPABASE ---
 const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
-const supabaseKey = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBieHJxa2NrdGV0dWtxdGVod25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTQyMTMsImV4cCI6MjA5Nzg3MDIxM30.6OMrxTw-vslZtBwtiM3rK7ZAS4BalvfoEBon02cW12w';
+const supabaseKey = 'sb_publishable_s0eLXKp2okSYwppwrQvEVw_JNMKCIKw';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- 1. DESCARGAR TODO DESDE LA NUBE ---
