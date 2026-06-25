@@ -374,7 +374,7 @@
             user-select: none;
         }
 
-        #contenedor-flotante-bracket { top: 150px; left: 40px; width: 620px; }
+        #contenedor-flotante-bracket { top: 150px; left: 40px; width: 620px; } /* Ajustado para el nuevo bracket simétrico */
         #contenedor-flotante-tabla { top: 440px; left: 40px; width: 650px; }
 
         /* --- REDISEÑO BRACKET SIMÉTRICO SÓLO BANDERAS --- */
@@ -499,7 +499,7 @@
         </select>
         <input type="password" id="login-clave" class="campo-login" placeholder="Contraseña">
         <button onclick="intentarLogin()" style="width: 100%;">Ingresar</button>
-        <p class="error-msg" id="error-login" style="color:red; display:none; margin-top:10px;">Usuario o Contraseña incorrectos.</p>
+        <p class="error-msg" id="error-login">Usuario o Contraseña incorrectos.</p>
         
         <img src="t1.png" alt="Decoración Peluches" class="img-login-decoracion">
     </div>
@@ -594,7 +594,7 @@
 
     <div class="modal-quiniela" id="modal-q">
         <div class="modal-contenido">
-            <h2 id="modal-titulo" style="color: var(--verde-grama); margin-bottom: 15px;">Pronósticos del Mundial</h2>
+            <h2 id="modal-titulo" style="color: var(--verde-grama); margin-bottom: 5px;">Pronósticos del Mundial</h2>
             <div class="fases-nav">
                 <button class="btn-fase activa" id="fase-tab-grupos" onclick="cambiarFaseVisualizacion('grupos')">Clasificación Octavos (Grupos A-L)</button>
                 <button class="btn-fase" id="fase-tab-octavos" disabled>Resultados Octavos (Próximamente 29/06)</button>
@@ -603,15 +603,15 @@
                 <button class="btn-fase" id="fase-tab-final" disabled>Gran Final (Próximamente)</button>
             </div>
             <div class="grid-grupos" id="modal-grid-grupos"></div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button id="btn-modal-guardar" onclick="guardarMiQuiniela()">Guardar Cambios</button>
                 <button onclick="cerrarModal()" style="background: #666;">Cerrar</button>
             </div>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <script>
         const credenciales = {
             "Saul": "4rgentina", "Jorge": "3spaña", "Osmel": "8rasil",
@@ -657,24 +657,81 @@
             "K": { "1ro": "Senegal", "2do": "Serbia" }, "L": { "1ro": "Suecia", "2do": "Polonia" }
         };
 
-        // LLAVE ELIMINATORIA DINÁMICA DE CONTROL REAL (SÓLO BANDERAS)
-        const llaveEliminatoriaReal = {
-            izq: {
-                octavos: ["", "", "", "", "", "", "", ""], 
-                cuartos: ["", "", "", ""],
-                semi: ["", ""],
-                finalista: ""
-            },
-            der: {
-                octavos: ["", "", "", "", "", "", "", ""],
-                cuartos: ["", "", "", ""],
-                semi: ["", ""],
-                finalista: ""
-            },
-            campeon: ""
-        };
+// --- DATA DE LA RED ELIMINATORIA REAL (Deja vacío lo que aún no se ha jugado) ---
+const llaveEliminatoriaReal = {
+    izq: {
+        // Pon aquí los 8 clasificados de este lado a medida que se conozcan
+        octavos: ["", "", "", "", "", "", "", ""], 
+        cuartos: ["", "", "", ""],
+        semi: ["", ""],
+        finalista: ""
+    },
+    der: {
+        // Pon aquí los 8 clasificados del otro lado a medida que se conozcan
+        octavos: ["", "", "", "", "", "", "", ""],
+        cuartos: ["", "", "", ""],
+        semi: ["", ""],
+        finalista: ""
+    },
+    campeon: "" // Nombre del país campeón al final del mundial
+};
+function renderizarArbolBanderas() {
+    // Lado Izquierdo
+    inyectarBanderasColumna('b-izq-octavos', llaveEliminatoriaReal.izq.octavos, 2);
+    inyectarBanderasColumna('b-izq-cuartos', llaveEliminatoriaReal.izq.cuartos, 2);
+    inyectarBanderasColumna('b-izq-semi', llaveEliminatoriaReal.izq.semi, 1);
 
-        // COMPLETADO LOS 48 PAÍSES CON 10 DATOS REALES CADA UNO (REPARADA LÍNEA DE SUDÁFRICA)
+    // Centro (Finalistas)
+    const centroFinal = document.getElementById('b-centro-final');
+    if (centroFinal) {
+        const flagIzq = banderasPaises[llaveEliminatoriaReal.izq.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.izq.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
+        const flagDer = banderasPaises[llaveEliminatoriaReal.der.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.der.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
+        centroFinal.innerHTML = `${flagIzq} <span style="color:white; font-weight:bold; font-size:11px;">VS</span> ${flagDer}`;
+    }
+
+    // Centro (Campeón)
+    const centroCampeon = document.getElementById('b-centro-campeon');
+    if (centroCampeon) {
+        centroCampeon.innerHTML = banderasPaises[llaveEliminatoriaReal.campeon] ? 
+            `<img class="bandera-bracket" style="width:45px; height:30px; border:2px solid gold;" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.campeon]}.svg">` : 
+            `<div class="bandera-bracket" style="width:45px; height:30px; background:rgba(255,255,255,0.1); border:1px dashed var(--dorado);"></div>`;
+    }
+
+    // Lado Derecho
+    inyectarBanderasColumna('b-der-semi', llaveEliminatoriaReal.der.semi, 1);
+    inyectarBanderasColumna('b-der-cuartos', llaveEliminatoriaReal.der.cuartos, 2);
+    inyectarBanderasColumna('b-der-octavos', llaveEliminatoriaReal.der.octavos, 2);
+}
+
+function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
+    const col = document.getElementById(idContenedor);
+    if (!col) return;
+    col.innerHTML = "";
+    for (let i = 0; i < listaPaises.length; i += agruparPor) {
+        const bloque = document.createElement('div');
+        bloque.classList.add('pareja-bloque');
+        for (let j = 0; j < agruparPor; j++) {
+            const pais = listaPaises[i + j];
+            const item = document.createElement('div');
+            
+            if (pais && banderasPaises[pais]) {
+                const img = document.createElement('img');
+                img.classList.add('bandera-bracket');
+                img.src = `https://flagcdn.com/${banderasPaises[pais]}.svg`;
+                bloque.appendChild(img);
+            } else {
+                // Si está vacío, dibuja un recuadro oscuro estético de reserva
+                const slotVacio = document.createElement('div');
+                slotVacio.classList.add('bandera-bracket');
+                slotVacio.style.background = "rgba(255,255,255,0.05)";
+                bloque.appendChild(slotVacio);
+            }
+        }
+        col.appendChild(bloque);
+    }
+}
+
+        // BASE DE DATOS COMPLETA DE LOS 48 PAÍSES (10 DATOS EXACTOS CADA UNO)
         const poolCuriosidades = {
             "Argentina": [
                 "Utilizó un balón de fabricación local en la primera final de Uruguay 1930.",
@@ -703,7 +760,7 @@
             "Marruecos": [
                 "Fue la primera selección africana en clasificar a octavos de final en México 1986.",
                 "En Catar 2022 se convirtieron en la primera nación de África en llegar a Semifinales.",
-                "Su guardameta Yassine Bounou fue héroe indiscutible en tandas de penales.",
+                "Su guardameta Yassine Bounou fue héroe indiscutible en tandas de penales decisivas.",
                 "Su debut absoluto en fases finales se dio en la edición de México 1970.",
                 "Son conocidos en el ecosistema del fútbol como los Leones del Atlas.",
                 "Marruecos ha presentado candidaturas para organizar el evento en múltiples ocasiones.",
@@ -716,7 +773,7 @@
                 "Clasificó por primera vez en su historia a una fase final en México 1986.",
                 "Su segundo boleto histórico lo consiguieron de forma directa para Catar 2022.",
                 "Alphonso Davies anotó el primer gol canadiense en mundiales contra Croacia.",
-                "Comparten la organización de la Copa del Mundo 2026 junto a EE.UU. and México.",
+                "Comparten la organización de la Copa del Mundo 2026 junto a EE.UU. y México.",
                 "El fútbol ha crecido exponencialmente en popularidad frente al hockey sobre hielo.",
                 "Su uniforme estelar rinde tributo directo a la clásica hoja de arce roja.",
                 "En 1986 jugaron en el mismo grupo de la poderosa escuadra de Francia.",
@@ -732,7 +789,7 @@
                 "Debutó oficialmente como selección en las Olimpiadas de Amberes de 1920.",
                 "Iker Casillas mantiene el récord de imbatibilidad en fases eliminatorias (480 minutos).",
                 "Fue la primera escuadra europea en ganar el campeonato fuera de su continente.",
-                "Consiguieron un ivicto histórico internacional de 35 compromisos seguidos.",
+                "Consiguieron un invicto histórico internacional de 35 compromisos seguidos.",
                 "Gavi se convirtió en su goleador más joven en la historia de la Copa de la FIFA.",
                 "La mítica e inolvidable mascota oficial de su edición en 1982 fue Naranjito."
             ],
@@ -796,51 +853,414 @@
                 "Tienen un récord de tarjetas en el partido de 2006 conocido como la Batalla de Núremberg.",
                 "Su federación fue fundada en 1914 para unificar el fútbol luso."
             ],
-            "Corea del Sur": ["Tiene la racha más larga de asistencia para un equipo asiático.","Consiguió el 4º puesto histórico en 2002.","Eliminó a Alemania en Rusia 2018 de forma dramática.","Son conocidos como los Guerreros Taeguek.","Su máxima estrella moderna es Son Heung-min.","Su debut absoluto ocurrió en el mundial de 1954.","Famosos por su gran despliegue y velocidad física en el campo.","La afición es conocida globalmente como los Diablos Rojos.","En 2002 ganaron batallas épicas contra Italia y España.","Su uniforme estelar usa los colores rojo y negro."],
-            "Jamaica": ["Clarificó históricamente al torneo de Francia 1998.","Son apodados globalmente los Reggae Boyz en el deporte.","Su primera victoria en eliminatorias fue contra El Salvador.","En Francia 98 venció 2-1 a Japón con goles de Whitmore.","El atletismo influye en la velocidad de sus jugadores actuales.","Su boleto mundialista generó un día de fiesta nacional oficial.","Bob Marley era un apasionado absoluto del juego.","Su uniforme resalta diseños con negro, verde y amarillo.","Robbie Earle marcó el primer gol de Jamaica en mundiales.","Nutren sus procesos con ligas del fútbol inglés."],
-            "Italia": ["Posee 4 títulos mundiales absolutos de fútbol.","Ganó dos mundiales de manera consecutiva (1934 y 1938).","Su histórico estilo defensivo es llamado el Catenaccio.","Visten de azul en honor a la Casa Real de Saboya.","Gianluigi Buffon disputó un récord de 5 mundiales.","Jugó el Partido del Siglo en México 70 ante Alemania (4-3).","Paolo Rossi fue el gran héroe del torneo de España 82.","Se coronó campeona mundial en Alemania 2006 ante Francia.","Mantiene una rivalidad clásica ancestral contra Brasil.","Dino Zoff campeonó con un récord de 40 años."],
-            "Bélgica": ["Logró un espectacular tercer lugar en Rusia 2018.","Son conocidos en Europa como los Diablos Rojos.","Lideró el ranking FIFA durante varios años seguidos.","Estuvieron presentes en la primera cita de Uruguay 1930.","En México 86 alcanzó las semifinales con Enzo Scifo.","Thibaut Courtois ganó el Guante de Oro en 2018.","Su escudo incorpora siglas trilingües tradicionales.","Destacan por un juego de posesión y flexibilidad táctica.","Su uniforme estelar lleva negro, amarillo y rojo.","Tiene un clásico fronterizo contra Países Bajos."],
-            "Argelia": ["Sorprendió al ganarle a Alemania Occidental en España 82.","Clasificó por primera vez a Octavos en Brasil 2014.","Llevó a la prórroga a Alemania en una batalla épica en 2014.","Son conocidos como los Zorros del Desierto en África.","Sufrió el 'Pacto de Gijón' entre alemanes y austriacos.","Su uniforme tradicional utiliza blanco, verde y rojo.","Muchos de sus jugadores nacieron o se criaron en Francia.","Destacan por su enorme habilidad en espacios reducidos.","Su debut absoluto en mundiales fue en España 1982.","Logró el pase en 2010 tras desempate contra Egipto."],
-            "Honduras": ["Hizo su debut absoluto en el Mundial de España 1982.","Empató ante España e Irlanda del Norte en su debut.","Asistió a las citas consecutivas de 2010 y 2014.","Son llamados popularmente la Bicolor o los Catrachos.","Carlos Pavón es su máximo referente histórico ofensivo.","Chelato Uclés es considerado el técnico eterno catracho.","Su uniforme tradicional es blanco con la letra H en el pecho.","Mantiene duelos feroces contra México y Estados Unidos.","La fuerza y velocidad marcan el biotipo del jugador.","La liga local nutre históricamente sus plantillas mundiales."],
-            "Uruguay": ["Fue el organizador y campeón del primer mundial en 1930.","Consiguió el legendario Maracanazo en Brasil 1950.","Su escudo luce 4 estrellas oficiales por torneos mundiales.","Su identidad competitiva es la histórica Garra Charrúa.","Es el país más pequeño en población en ganar un mundial.","Luis Suárez es su máximo anotador histórico general.","Diego Forlán ganó el Balón de Oro en Sudáfrica 2010.","El Estadio Centenario es Monumento Histórico del Fútbol.","Juega el Clásico del Río de la Plata ante Argentina.","Fue el primer campeón invicto de la historia de la FIFA."],
-            "Inglaterra": ["Ganó su única Copa del Mundo actuando local en 1966.","Son considerados los inventores de las reglas del fútbol.","Su escudo porta con orgullo los tres leones británicos.","Gary Lineker ganó la Bota de Oro en México 1986.","Su estadio nacional de Wembley es una catedral del juego.","Sufren una histórica maldición en tandas de penales.","La Premier League local es la más vista en el planeta.","El gol fantasma de Geoff Hurst en el 66 sigue en disputa.","Mantiene duelos clásicos feroces ante Alemania y Argentina.","Su uniforme combina camiseta blanca con pantalón azul."],
-            "Australia": ["Clasificó por primera vez en la edición de Alemania 74.","Migró de Oceanía a la Confederación Asiática para competir.","Son apodados globalmente los Socceroos en torneos.","Tim Cahill anotó goles en tres mundiales diferentes.","Avanzó a Octavos de Final en 2006 y en Catar 2022.","En 2006 cayó con honor por un penal dudoso ante Italia.","Su uniforme de la selección combina verde y oro tradicional.","La MLS y Europa nutren la base de sus jugadores.","Destacan siempre por un despliegue y disciplina atlética.","La repesca de 2005 ante Uruguay es su máxima gesta."],
-            "Irak": ["Clasificó de forma única al Mundial de México 1986.","Compitió en un grupo rudo ante México, Paraguay y Bélgica.","Ahmed Radhi marcó el único gol de Irak en mundiales.","El fútbol funciona como un tremendo unificador nacional.","Se coronaron campeón de Asia en 2007 en una gesta heroica.","Su apodo de la selección es los Leones de Mesopotamia.","Su uniforme tradicional es verde o blanco completo.","Logró clasificar al 86 jugando partidos en cancha neutral.","El talento técnico y el temperamento marcan su juego.","Su federación trabaja activamente en levantar estadios."],
-            "Países Bajos": ["Creadores del Fútbol Total con Cruyff en los años 70.","Ha perdido 3 finales de Copas del Mundo sin ganar ninguna.","Visten de naranja por la Casa Real de Orange.","Johan Cruyff es el máximo ícono histórico del país.","Goleó 5-1 a España en la Copa del Mundo de Brasil 2014.","Son llamados popularmente la Naranja Mecánica.","Dennis Bergkamp anotó un gol antológico en Francia 98.","Ajax y PSV son sus grandes bases de formación técnica.","Mantiene choques feroces contra Alemania y Argentina.","Robin van Persie es su máximo goleador histórico mundial."],
-            "Croacia": ["Sorprendió al mundo al ser 3º en el Mundial de Francia 98.","Disputó la gran final de Rusia 2018 ante Francia.","Luka Modric ganó el Balón de Oro de la FIFA en 2018.","Su camiseta destaca por el ajedrezado rojo y blanco.","Es un país joven que encadena podios mundiales seguidos.","Davor Suker fue el máximo goleador en la cita de 1998.","Considerados reyes de las prórrogas y tandas de penales.","Nació futbolísticamente tras la disolución de Yugoslavia.","El tridente Modric-Rakitic-Brozovic marcó su edad de oro.","Reflejan un inmenso orgullo patriótico en la cancha."],
-            "Nigeria": ["Deslumbró al planeta con fútbol alegre en EE.UU. 94.","Son llamados las Súper Águilas en el continente africano.","Ganó la medalla de oro olímpica venciendo a potencias.","Su indumentaria de Rusia 2018 batió récords de venta.","Rashidi Yekini celebró el primer gol Nigeria en la red.","Es el cuadro africano con más pases a Octavos de Final.","Mantiene una rivalidad fija ante Argentina en grupos.","Combina una potencia física tremenda con fantasía técnica.","Stephen Keshi fue campeón como jugador y como director.","Aporta talento masivo a las ligas de toda Europa."],
-            "Panamá": ["Clasificó por primera vez en la historia a Rusia 2018.","Un gol agónico de Román Torres selló el pase histórico.","Felipe Baloy marcó el primer gol del país ante Inglaterra.","El gobierno declaró fiesta nacional tras el pase en 2017.","Son conocidos en Concacaf como la Marea Roja o Canaleros.","Bolillo Gómez fue el técnico encargado del debut mundial.","El béisbol cede terreno ante el tremendo auge del fútbol.","Su uniforme estelar destaca por el color rojo encendido.","Luis Tejada es considerado el gran ícono ofensivo panameño.","Un gran porcentaje de fanáticos los acompañó a Rusia."],
-            "Colombia": ["Su mejor gesta fue llegar a Cuartos en Brasil 2014.","James Rodríguez ganó la Bota de Oro en 2014 con 6 goles.","El gol de Freddy Rincón a Alemania en el 90 es eterno.","Son conocidos como el combinado Cafetero en el mundo.","La generación de Valderrama maravilló al planeta fútbol.","René Higuita revolucionó con el estilo de arquero-líbero.","Ganó el premio Fair Play de la FIFA en Brasil 2014.","Su uniforme viste camiseta amarilla y pantalón azul.","La celebración con bailes grupales se volvió viral.","Radamel Falcao es el máximo artillero de su historia."],
-            "Suiza": ["Récord invicto de cero goles recibidos en Alemania 2006.","Organizó la quinta edición de la Copa Mundial en 1954.","Jugó ante Austria el juego con más goles (7-5) en el 54.","Se les conoce deportivamente como el equipo Nati.","Su uniforme luce la cruz blanca sobre el fondo rojo.","Clasifica de forma constante a fases eliminatorias de FIFA.","Su plantilla destaca por una inmensa multiculturalidad.","Famosos por planteamientos de alto orden defensivo.","Shaqiri ha anotado goles en múltiples mundiales seguidos.","Su federación es de las más antiguas, nacida en 1895."],
-            "Irán": ["Consiguió su primer triunfo ante EE.UU. en Francia 98.","Son conocidos popularmente como el Equipo Melli.","Ali Daei fue el máximo artillero internacional del planeta.","Debutó oficialmente en mundiales en Argentina 1978.","Famosos por esquemas defensivos de enorme resistencia.","Carlos Queiroz dirigió al cuadro en tres mundiales seguidos.","Su camiseta luce la silueta del guepardo asiático.","El fútbol desata pasiones desbordantes en sus ciudades.","Estuvieron muy cerca de pasar a Octavos en Rusia 2018.","Sus principales figuras compiten en ligas de Europa."],
+            "Corea del Sur": [
+                "Es la selección asiática con más participaciones históricas en fases finales.",
+                "Lograron un histórico e increíble cuarto lugar actuando como locales en 2002.",
+                "Anotaron la eliminación definitiva de Alemania en la fase de grupos de Rusia 2018.",
+                "Son conocidos popularmente por sus aficionados como los Diablos Rojos.",
+                "Su estrella Hong Myung-bo fue galardonado con el Balón de Bronce en 2002.",
+                "Su primera aparición absoluta en el certamen ocurrió en Suiza 1954.",
+                "Son famosos por la disciplina militar y velocidad física de sus plantillas.",
+                "Son Heung-min es considerado uno de los mayores íconos deportivos de su historia.",
+                "En 2002 eliminaron de forma consecutiva a potencias como Italia y España.",
+                "Su uniforme tradicional destaca por el uso del rojo encendido y blanco."
+            ],
+            "Jamaica": [
+                "Hicieron historia al clasificar al Mundial de Francia 1998.",
+                "Son conocidos mundialmente en el deporte como los Reggae Boyz.",
+                "Su primera victoria en una Copa del Mundo fue contra El Salvador en eliminatorias.",
+                "En Francia 98 sumaron 3 puntos al vencer a Japón con doblete de Theodore Whitmore.",
+                "El atletismo y la velocidad natural marcan el biotipo de sus futbolistas.",
+                "Su clasificación desató una fiesta nacional declarada oficialmente por su gobierno.",
+                "El mítico Bob Marley era un apasionado del fútbol y seguidor de la selección.",
+                "Su uniforme es famoso por incorporar vibrantes patrones geométricos en verde, amarillo y negro.",
+                "Robbie Earle anotó el primer gol de Jamaica en la historia de las fases finales.",
+                "La mayoría de sus jugadores históricos militaban en el fútbol de Inglaterra."
+            ],
+            "Italia": [
+                "Es una de las grandes potencias mundiales con 4 títulos absolutos conquistados.",
+                "Consiguieron ganar dos copas mundiales de forma consecutiva en 1934 y 1938.",
+                "Su estilo defensivo histórico ha sido catalogado mundialmente como Catenaccio.",
+                "Visten de color azul (Azzurro) en honor a la Casa Real de Saboya.",
+                "El guardameta Gianluigi Buffon disputó un récord de 5 ediciones mundiales.",
+                "Protagonizaron junto a Alemania el 'Partido del Siglo' en México 1970 (4-3).",
+                "Su campeonato en España 1982 consagró al mítico delantero Paolo Rossi.",
+                "Ganaron su cuarta corona en Alemania 2006 venciendo a Francia en penales.",
+                "Mantienen una rivalidad histórica de alta tensión futbolística con Brasil.",
+                "Dino Zoff se convirtió en el campeón más longevo ganando con 40 años."
+            ],
+            "Bélgica": [
+                "Lograron un histórico tercer lugar en el Mundial de Rusia 2018.",
+                "Se les conoce en el entorno del fútbol europeo como los Diablos Rojos.",
+                "Su generación dorada lideró el ranking de la FIFA durante varios años seguidos.",
+                "Estuvieron presentes en la edición inaugural de Uruguay 1930.",
+                "En México 1986 llegaron a semifinales inspirados por el talento de Enzo Scifo.",
+                "Su guardameta Thibaut Courtois ganó el Guante de Oro en la edición de 2018.",
+                "Es un país trilingüe, por lo que su escudo lleva las siglas en francés y flamenco.",
+                "Tienen una larga tradición de esquemas tácticos de alta flexibilidad y posesión.",
+                "Su uniforme estelar resalta los colores negro, amarillo y rojo de su bandera.",
+                "Mantienen un clásico de frontera de alta rivalidad contra los Países Bajos."
+            ],
+            "Argelia": [
+                "Dieron la gran sorpresa al vencer a Alemania Occidental en España 1982.",
+                "Clasificaron por primera vez a los Octavos de Final en Brasil 2014.",
+                "Llevaron a la prórroga a la postre campeona Alemania en una batalla épica.",
+                "Son conocidos en el continente africano como los Zorros del Desierto.",
+                "En 1982 sufrieron el 'Pacto de Gijón' entre Alemania y Austria que los eliminó.",
+                "Su uniforme representativo utiliza los colores blanco y verde con detalles rojos.",
+                "Gran parte de sus jugadores históricos poseen doble nacionalidad franco-argelina.",
+                "Su estilo se caracteriza por la tremenda habilidad técnica en espacios reducidos.",
+                "Su primera aparición oficial en fases finales se registró en 1982.",
+                "La clasificación de 2010 la consiguieron tras un dramático desempate contra Egipto."
+            ],
+            "Honduras": [
+                "Hicieron su debut histórico absoluto en la Copa de España 1982.",
+                "Consiguieron empates legendarios ante el anfitrión España e Irlanda del Norte en el 82.",
+                "Regresaron a la máxima cita del fútbol en las ediciones de 2010 y 2014.",
+                "Se les conoce popularmente en Centroamérica como la Bicolor o los Catrachos.",
+                "Su máximo referente histórico en mundiales ha sido el delantero Carlos Pavón.",
+                "El técnico Chelato Uclés es considerado el héroe estratega eterno del país.",
+                "Su uniforme clásico es blanco inmaculado con la icónica letra 'H' en el pecho.",
+                "Mantienen duelos de alta intensidad regional frente a México y EE.UU.",
+                "La velocidad física y la fuerza marcan la identidad de sus plantillas.",
+                "Su liga local ha servido de base fundamental para nutrir los procesos mundialistas."
+            ],
+            "Uruguay": [
+                "Fueron los organizadores y campeones del primer mundial en 1930.",
+                "Protagonizaron la hazaña más grande de la historia ganando el Maracanazo en 1950.",
+                "Su camiseta celeste cuenta con 4 estrellas por títulos de jerarquía mundial.",
+                "Su identidad de juego está definida por la legendaria 'Garra Charrúa'.",
+                "Es el país con menor población en la historia en haber ganado una Copa del Mundo.",
+                "Luis Suárez es su máximo anotador histórico en procesos generales.",
+                "Diego Forlán fue elegido el mejor jugador de Sudáfrica 2010 ganando el Balón de Oro.",
+                "Su estadio nacional, el Centenario, fue declarado Monumento Histórico del Fútbol.",
+                "Mantienen el clásico del Río de la Plata, una rivalidad ancestral con Argentina.",
+                "Fueron la primera selección en coronarse de forma invicta en la historia."
+            ],
+            "Inglaterra": [
+                "Se proclamaron campeones del mundo en su propia tierra en el año 1966.",
+                "Son considerados históricamente los inventores del fútbol moderno.",
+                "Su escudo luce con orgullo los tres leones de la corona británica.",
+                "Gary Lineker ganó la Bota de Oro como máximo goleador en México 1986.",
+                "Su estadio nacional de Wembley es considerado la catedral mundial del fútbol.",
+                "Tienen una larga e histórica maldición con las tandas de penales eliminatorias.",
+                "Su liga local, la Premier League, es la más vista y poderosa de todo el planeta.",
+                "El gol fantasma de Geoff Hurst en la final de 1966 sigue siendo discutido.",
+                "Mantienen partidos de enorme rivalidad e historia contra Argentina y Alemania.",
+                "Su uniforme clásico se compone de camiseta blanca y pantalón azul marino."
+            ],
+            "Australia": [
+                "Clasificaron a su primer mundial en la edición de Alemania 1974.",
+                "Cambiaron de confederación deportiva de Oceanía a Asia para elevar su nivel.",
+                "Se les conoce mundialmente en todas las disciplinas como los Socceroos.",
+                "Su jugador leyenda Tim Cahill anotó en tres mundiales diferentes.",
+                "Su mejor registro ha sido avanzar a los Octavos de Final en 2006 y 2022.",
+                "En 2006 cayeron con honor ante Italia por un penal polémico de último minuto.",
+                "El uniforme de la selección combina los colores verde y oro tradicional del país.",
+                "La mayoría de sus plantillas provienen de ligas europeas y de la A-League local.",
+                "Destacan siempre por su tremendo despliegue físico y disciplina atlética.",
+                "La clasificación de 2005 ante Uruguay en penales es su mayor hazaña histórica."
+            ],
+            "Irak": [
+                "Consiguieron su histórica y única clasificación mundialista para México 1986.",
+                "Jugaron en un grupo sumamente complejo ante Paraguay, Bélgica y el anfitrión México.",
+                "Ahmed Radhi anotó el único gol de Irak en la historia de los mundiales.",
+                "A pesar de los conflictos internos, el fútbol es el deporte unificador del país.",
+                "Se coronaron campeones de la Copa Asiática en 2007 en una gesta heroica.",
+                "Su apodo oficial en las competiciones es los Leones de Mesopotamia.",
+                "El uniforme representativo destaca por el uso del blanco completo o verde olivo.",
+                "Su clasificación al torneo de 1986 la lograron jugando todos sus partidos de locales en terreno neutral.",
+                "El talento técnico y el temperamento competitivo definen a sus jugadores.",
+                "Su federación trabaja activamente en la reconstrucción de infraestructura deportiva local."
+            ],
+            "Países Bajos": [
+                "Son considerados los creadores del revolucionario 'Fútbol Total' de los años 70.",
+                "Tienen la marca histórica de haber jugado tres finales mundiales sin ganar ninguna.",
+                "Visten completamente de color naranja en honor a la Casa Real de Orange.",
+                "Johan Cruyff es considerado su máximo exponente y leyenda eterna.",
+                "Su victoria 5-1 sobre España en 2014 es de sus partidos más recordados.",
+                "Se les conoce popularmente en todo el mundo como la Naranja Mecánica.",
+                "Dennis Bergkamp anotó uno de los goles más hermosos de la historia en Francia 98.",
+                "Tienen una profunda escuela formativa ligada a las academias del Ajax y PSV.",
+                "Mantienen batallas clásicas de alta fricción contra las selecciones de Alemania y Argentina.",
+                "Su mejor registro goleador lo ostenta Robin van Persie."
+            ],
+            "Croacia": [
+                "Dieron la gran sorpresa mundial al conseguir el tercer lugar en Francia 1998.",
+                "Lograron una histórica e inolvidable final mundialista en Rusia 2018.",
+                "Su capitán Luka Modric ganó el Balón de Oro del Mundial en 2018.",
+                "Su camiseta es de las más famosas por su diseño de ajedrezado rojo y blanco.",
+                "Es un país con poca población que ha encadenado podios mundiales seguidos.",
+                "Davor Šuker se consagró como el máximo goleador del torneo de 1998.",
+                "Son considerados los reyes de las prórrogas tras avanzar múltiples rondas en penales.",
+                "Su federación se fundó de forma independiente tras la disolución de Yugoslavia.",
+                "El mediocampo Modric-Rakitic-Brozovic marcó la época dorada de su fútbol.",
+                "Destacan por un tremendo orgullo nacional que reflejan en cada encuentro."
+            ],
+            "Nigeria": [
+                "Deslumbraron al mundo entero con su fútbol alegre en el Mundial de EE.UU. 1994.",
+                "Son conocidos internacionalmente en el entorno del fútbol como las Súper Águilas.",
+                "Han ganado la medalla de oro olímpica derrotando a potencias mundiales.",
+                "Su indumentaria para Rusia 2018 rompió récords globales de ventas por su diseño urbano.",
+                "Rashidi Yekini anotó el primer gol nigeriano en mundiales celebrándolo en la red.",
+                "Es la selección africana que más veces ha clasificado a los Octavos de Final.",
+                "Mantienen una curiosa y constante rivalidad con Argentina en fases de grupos.",
+                "Su estilo histórico combina potencia física exuberante con fantasía técnica.",
+                "Stephen Keshi fue campeón africano como jugador y posteriormente como seleccionador.",
+                "Han aportado grandes talentos a las principales ligas del fútbol europeo."
+            ],
+            "Panamá": [
+                "Lograron su histórica y primera clasificación mundialista para Rusia 2018.",
+                "El gol de Román Torres ante Costa Rica selló la clasificación más emotiva del país.",
+                "Felipe Baloy anotó el primer gol de Panamá en una Copa del Mundo ante Inglaterra.",
+                "Su gobierno declaró día de fiesta nacional tras conseguir el boleto en 2017.",
+                "Son conocidos popularmente en la confederación como la Marea Roja o los Canaleros.",
+                "El técnico Hernán Darío Gómez los guió en su primera experiencia mundialista.",
+                "La influencia del béisbol ha ido cediendo terreno ante el auge total del fútbol.",
+                "Su uniforme estelar destaca por un color rojo encendido con detalles blancos.",
+                "Su jugador histórico leyenda es el fallecido delantero Luis Tejada.",
+                "Cuentan con una de las fanaticadas más fieles y alegres de la zona de Concacaf."
+            ],
+            "Colombia": [
+                "Su mejor participación histórica se registró en Brasil 2014 llegando a Cuartos.",
+                "James Rodríguez ganó la Bota de Oro como máximo goleador en 2014 con 6 tantos.",
+                "El gol de Freddy Rincón a Alemania en el 90 es recordado como un hito nacional.",
+                "Son conocidos mundialmente en el deporte como el conjunto Cafetero.",
+                "Su generación de los 90 liderada por Carlos Valderrama maravilló al planeta.",
+                "El guardameta René Higuita revolucionó el puesto con su estilo de arquero-líbero.",
+                "En Brasil 2014 ganaron el premio al Juego Limpio otorgado por la FIFA.",
+                "Su uniforme tradicional se compone de camiseta amarilla, pantalón azul y medias rojas.",
+                "La icónica celebración bailando en grupo se volvió viral en el mundial de 2014.",
+                "Radamel Falcao García es su máximo anotador histórico en procesos generales."
+            ],
+            "Suiza": [
+                "Mantienen el récord histórico de no recibir un solo gol en una edición (Alemania 2006).",
+                "Fueron los organizadores de la quinta edición de la Copa Mundial en 1954.",
+                "Su partido de 1954 contra Austria terminó 7-5, el de más goles en la historia.",
+                "Se les conoce comúnmente en Europa como el equipo Nati.",
+                "Su uniforme clásico luce con orgullo el diseño de la cruz blanca sobre fondo rojo.",
+                "Han clasificado de forma constante a las rondas finales en los últimos torneos.",
+                "Su plantilla destaca por una inmensa multiculturalidad e integración de jugadores.",
+                "Son famosos por planteamientos tácticos defensivos sumamente ordenados.",
+                "Xherdan Shaqiri ha anotado goles memorables en múltiples mundiales seguidos.",
+                "Su federación de fútbol es de las más antiguas, fundada en el año 1895."
+            ],
+            "Irán": [
+                "Consiguieron su primera victoria histórica en mundiales ante EE.UU. en Francia 1998.",
+                "Se les conoce internacionalmente en el fútbol como el Equipo Melli.",
+                "Su delantero Ali Daei fue por mucho tiempo el máximo goleador internacional del planeta.",
+                "Hicieron su gran debut en la Copa del Mundo en la edición de Argentina 1978.",
+                "Destacan históricamente por planteamientos defensivos de enorme resistencia táctica.",
+                "El técnico Carlos Queiroz dirigió a la selección en tres mundiales consecutivos.",
+                "Su uniforme representativo incorpora la silueta del guepardo asiático en peligro de extinción.",
+                "El fútbol despierta una pasión desbordante en todas las ciudades del país.",
+                "Estuvieron muy cerca de clasificar a Octavos en Rusia 2018 en un grupo durísimo.",
+                "La mayoría de sus figuras actuales militan en ligas importantes de Europa."
+            ],
             "Sudáfrica": [
                 "Hicieron su gran debut mundialista en la edición de Francia 1998.",
                 "Fueron los orgullosos organizadores del primer mundial en tierras africanas (2010).",
-                "Su jugador Siphiwe Tshabalala anotó el primer gol de 2010 desatando la locura.",
-                "Son conocidos cariñosamente los Bafana Bafana.",
-                "Nelson Mandela unió al país usando la Copa del Mundo.",
-                "El sonido de vuvuzelas marcó el sello de su mundial.",
-                "Fue el primer anfitrión eliminado en fase de grupos.",
-                "Venció históricamente a Francia en el torneo de 2010.",
-                "Su uniforme combina de forma alegre amarillo y verde.",
-                "Su liga local es la de mayor poder económico en África."
+                "Su jugador Siphiwe Tshabalala anotó el primer gol de 2010 desatando la locura local.",
+                "Son conocidos cariñosamente en todo el mundo como los Bafana Bafana.",
+                "Su expresidente Nelson Mandela fue clave para unir al país a través del torneo.",
+                "El sonido de las vuvuzelas en las gradas se convirtió en el gran sello de su mundial.",
+                "En 2010 se convirtieron en el primer anfitrión en quedar fuera en fase de grupos.",
+                "Lograron una victoria histórica ante la potencia de Francia en el torneo de 2010.",
+                "Su uniforme resalta por la brillante combinación de amarillo, verde y negro.",
+                "Su liga local, la PSL, es una de las estructuras de fútbol con mayor poder económico de África."
             ],
-            "Estados Unidos": ["Consiguió el 3º puesto en el mundial inaugural de 1930.","Sorprendió al vencer 1-0 a Inglaterra en Brasil 1950.","Organizó el Mundial 1994 con asistencias récords.","El deporte en esta nación es llamado 'Soccer'.","Avanzó a Cuartos de Final en la cita de Corea-Japón 2002.","Landon Donovan es su máximo goleador en fases finales.","Coorganiza el Mundial 2026 junto a Canadá y México.","Su uniforme adopta los colores de las barras y estrellas.","La MLS nació como herencia directa del mundial del 94.","Mantiene un clásico de Concacaf de alta tensión ante México."],
-            "Gales": ["Clasificó por primera vez en el torneo de Suecia 1958.","Fue eliminado en el 58 por el primer gol de Pelé.","Regresó al torneo de la FIFA tras 64 años en Catar 2022.","Gareth Bale fue su máximo referente en la era moderna.","Son conocidos en el Reino Unido como los Dragones Rojos.","Su escudo luce con orgullo el dragón celta tradicional.","Bale anotó el gol del regreso ante EE.UU. en Catar.","Sus jugadores compiten en el sistema de ligas de Inglaterra.","Su afición es famosa por entonar cantos tradicionales.","La disciplina y contraataque veloz marcan su identidad."],
-            "Arabia Saudita": ["Batió a la Argentina de Lionel Messi en Catar 2022.","Avanzó a los Octavos de Final en Estados Unidos 1994.","Al-Owairan anotó un gol maradoniano eludiendo a Bélgica.","Son conocidos los Hijos del Desierto en Medio Oriente.","Su debut en la gran cita mundial ocurrió en el 94.","Toda su plantilla compite tradicionalmente en liga local.","Visten de verde o blanco completo por sus símbolos.","Es potencia de su área ganando Copas del Golfo.","Su gobierno premió de forma histórica el triunfo del 2022.","Inversiones masivas atraen figuras globales a su liga."],
-            "Perú": ["Estuvo presente en el mundial inicial de Uruguay 1930.","Brilló en México 70 comandados por Teófilo Cubillas.","Cubillas anotó 10 goles en la historia de los mundiales.","Regresaron de forma emotiva a Rusia 2018 tras 36 años.","Su camiseta de franja roja diagonal es un ícono del diseño.","Clasificó líder invicto en su grupo de Argentina 78.","Su afición ganó el premio de la FIFA Fan Award en 2018.","Famosos por un juego de toque fino, picardía y posesión.","Paolo Guerrero es su máximo artillero en eliminatorias.","Lolo Fernández es el ídolo máximo primitivo del país."],
-            "México": ["Es el país con más partidos inaugurales disputados.","Ha organizado dos mundiales en solitario: 1970 y 1986.","Vio coronarse en su césped a Pelé y a Diego Maradona.","Su tope histórico ha sido jugar los Cuartos de Final.","La maldición del quinto partido marcó sus fases de Octavos.","Rafa Márquez capitaneó al cuadro en 5 mundiales distintos.","Es coorganizador de la cita de 2026 en Norteamérica.","El Estadio Azteca tendrá tres partidos inaugurales.","Su afición inunda de color, mariachis y fiesta las sedes.","Su uniforme viste verde, blanco y medias rojas."],
-            "Dinamarca": ["Deslumbró en México 86 apodados la Dinamita Danesa.","Alcanzó los Cuartos de Final en el Mundial de Francia 1998.","Michael y Brian Laudrup son sus máximas leyendas.","Ganó la Eurocopa de 1992 tras entrar por invitación.","Su juego destaca por orden, dinámica y mente fría.","Su uniforme Hummel rojo y blanco es un ícono retro.","Jugó un partido memorable ante Brasil en el 98 (3-2).","Tomasson es su máximo anotador en fases de mundiales.","Peter Schmeichel fue de los mejores arqueros del siglo.","La fuerza colectiva marca la pauta de sus procesos."],
-            "Túnez": ["Primer equipo africano en ganar un juego (Argentina 78).","Son apodados las Águilas de Cartago en el continente.","Su debut oficial ocurrió en la cita mundial del 78.","Nunca ha logrado superar la fase de grupos en mundiales.","Venció de manera histórica 1-0 a Francia en Catar 2022.","Su uniforme adopta el rojo y blanco de su bandera.","Su estilo resalta por orden estricto e intensidad media.","Sus jugadores compiten localmente o en el fútbol francés.","Mantiene una dura rivalidad contra Argelia y Egipto.","Su distribución táctica es rocosa y difícil de quebrar."],
-            "Nueva Zelanda": ["Clasificó por primera vez al torneo de España 1982.","Terminó invicta la fase de grupos de Sudáfrica 2010.","Único equipo invicto de todo el torneo en 2010 (3 empates).","Son llamados popularmente los All Whites en el deporte.","El fútbol compite directo contra el poderío del rugby.","Su uniforme es blanco por contraste directo al rugby negro.","Empató 1-1 ante la campeona defensora Italia en 2010.","Ryan Nelsen fue su gran capitán y leyenda defensiva.","Compiten en ligas de Australia o del fútbol inglés.","Dominan absolutamente la zona de eliminatorias de Oceanía."],
-            "Chile": ["Organizó la séptima Copa Mundial en el año 1962.","Consiguió el tercer lugar mundial actuando como local.","Leonel Sánchez fue goleador del mundial 62 con 4 tantos.","Su identidad de juego agresiva destaca por alta presión.","Se les conoce en el continente como la escuadra Roja.","Su generación dorada conquistó dos Copas América seguidas.","Jugó ante Italia la friccionada 'Batalla de Santiago'.","Iván Zamorano es su gran artillero histórico de Conmebol.","El Nacional de Santiago es su templo principal de juego.","Fue uno de los trece países pioneros en Uruguay 1930."],
-            "Austria": ["Su época de oro fue con el Wunderteam en los años 30.","Alcanzaron el tercer puesto mundial en Suiza 1954.","Jugó ante Suiza el partido de más goles de la historia.","Matthias Sindelar fue apodado el Mozart del fútbol.","Se ausentaron en 1938 por la anexión del territorio.","Mantiene un clásico de alta rivalidad contra Hungría.","Su uniforme viste camiseta blanca y pantalón negro.","Logró el Milagro de Córdoba batiendo a Alemania en el 78.","David Alaba es su referente moderno de mayor impacto.","Su liga local funciona de trampolín para jóvenes."],
-            "Egipto": ["Primer país de África en jugar un mundial (Italia 34).","El-Hadary jugó un mundial con un récord de 45 años.","Son conocidos en el mundo como los Faraones.","Máximos ganadores de Copas Africanas con 7 coronas.","Mohamed Salah es su deidad de la era moderna.","Fawzi anotó el primer gol africano de la historia mundial.","Pasión extrema dividida entre clubes Al Ahly y Zamalek.","Su uniforme clásico es rojo brillante con detalles negros.","Solo han logrado clasificar a tres mundiales en la historia.","Su gran fortín eliminatorio es el Estadio de El Cairo."],
-            "China": ["Clasificó de forma única a Corea-Japón 2002.","Fueron dirigidos por el trotamundos Bora Milutinovic.","Compartió grupo ante Brasil, Turquía y Costa Rica.","Mantiene un plan estratégico estatal para potenciar su fútbol.","Sun Jihai brilló en el Manchester City de Inglaterra.","Su uniforme adopta el rojo y amarillo de su bandera.","Trabajan intensamente para regresar a una fase final.","Su liga atrajo estrellas mundiales con ofertas masivas.","Tienen alta tensión deportiva contra Japón y Corea.","Su federación se afilió a la FIFA en el año 1931."],
-            "Senegal": ["Batió a la campeona Francia en su debut de Corea-Japón.","Llegó de forma espectacular a Cuartos en su debut 2002.","Son conocidos como los Leones de la Teranga en África.","Aliou Cissé fue capitán en 2002 y hoy es el entrenador.","Se coronaron campeones de África por primera vez en 2022.","Sadio Mané es el gran astro moderno de su historia.","Eliminado de Rusia 2018 por el criterio de tarjetas.","Su estilo une potencia física con velocidad por bandas.","Papa Bouba Diop anotó el gol histórico contra Francia.","La mayoría milita en ligas de Inglaterra, Francia e Italia."],
-            "Serbia": ["Heredó registros históricos de la antigua Yugoslavia.","Son conocidos como las Águilas Blancas en el continente.","Venció 1-0 a Alemania en el Mundial de Sudáfrica 2010.","Producen volantes de gran físico y fina técnica.","Rivalidad balcánica de alta tensión ante Croacia y Suiza.","Su uniforme clásico es rojo con detalles de su bandera.","Dragan Stojkovic es el mito máximo de su banquillo.","Estrella Roja nutre constantemente con su cantera a Europa.","El juego aéreo es de sus principales armas de ataque.","Compiten con el nombre de Serbia desde el 2006."],
-            "Camerún": ["Primer africano en llegar a Cuartos de Final (Italia 90).","Roger Milla anotó 4 goles celebrándolo con baile en el córner.","Son conocidos en el mundo como los Leones Indomables.","Samuel Eto'o es el presidente actual de su federación.","Quedó de forma invicta con tres empates en España 82.","Usaron camisetas revolucionarias sin mangas en 2002.","Eto'o jugó cuatro mundiales distintos en su carrera.","Rivalidad continental de alta tensión contra Nigeria.","Goleó 1-0 a la Argentina de Maradona en el debut del 90.","Exporta de forma masiva talentos a ligas europeas."],
-            "Costa Rica": ["Llegó a Cuartos de Final de forma histórica en Brasil 2014.","Líder del grupo de la muerte ante Uruguay, Italia e Inglaterra.","Keylor Navas saltó al Real Madrid tras su mundial 2014.","Debutó oficialmente en la cita de Italia 1990.","Son conocidos como los Ticos o la Sele en Concacaf.","Bora Milutinovic comandó la hazaña de Octavos en el 90.","Su uniforme es de camiseta roja y pantalón azul.","Su bloque colectivo destaca por alta disciplina táctica.","Mantiene clásico de alta intensidad ante Honduras.","El lema 'Pura Vida' acompaña la identidad de su delegación."],
+            "Estados Unidos": [
+                "Consiguieron el tercer lugar en el mundial inaugural de Uruguay 1930.",
+                "Dieron la gran sorpresa histórica al vencer 1-0 a Inglaterra en Brasil 1950.",
+                "Organizaron el Mundial de 1994, el de mayor asistencia total de la historia.",
+                "El fútbol en este país es denominado formalmente como 'Soccer'.",
+                "Llegaron a la instancia de los Cuartos de Final en el torneo de Corea-Japón 2002.",
+                "Su jugador histórico Landon Donovan es su máximo anotador en fases finales.",
+                "Comparten la organización de la Copa del Mundo 2026 junto a Canadá y México.",
+                "Su uniforme tradicional adopta los colores de las barras y las estrellas de su bandera.",
+                "La Major League Soccer nació como consecuencia directa del éxito del mundial del 94.",
+                "Mantienen una enconada rivalidad en la zona de Concacaf contra la selección de México."
+            ],
+            "Gales": [
+                "Clasificaron a su primer mundial en la lejana edición de Suecia 1958.",
+                "En su debut en el 58 llegaron a Cuartos y fueron eliminados por el primer gol mundialista de Pelé.",
+                "Regresaron a la máxima competición de la FIFA tras 64 años de espera en Catar 2022.",
+                "Su máxima figura histórica de la era moderna ha sido el extremo Gareth Bale.",
+                "Se les conoce en el entorno del fútbol británico como los Dragones Rojos.",
+                "Su escudo luce con orgullo el dragón galés tradicional de su herencia celta.",
+                "Bale anotó de penal el gol del regreso mundialista ante EE.UU. en 2022.",
+                "La mayoría de sus componentes compiten directamente en el sistema de ligas de Inglaterra.",
+                "Su afición destaca por entonar cánticos tradicionales galeses de enorme emotividad.",
+                "La disciplina táctica y el contragolpe veloz definen su estilo histórico de juego."
+            ],
+            "Arabia Saudita": [
+                "Sorprendieron al mundo entero al derrotar a la Argentina de Messi en Catar 2022.",
+                "Su mejor registro histórico fue clasificar a Octavos de Final en EE.UU. 1994.",
+                "Saeed Al-Owairan anotó en el 94 un gol maradoniano eludiendo a toda la defensa de Bélgica.",
+                "Son conocidos popularmente en el Medio Oriente como los Hijos del Desierto.",
+                "Su debut oficial en la gran cita de la FIFA ocurrió en el torneo de 1994.",
+                "Tradicionalmente, toda su plantilla juega exclusivamente en la liga local saudí.",
+                "Su uniforme es completamente verde o blanco, reflejo directo de sus símbolos nacionales.",
+                "Han dominado la Copa del Golfo y son una potencia consolidada en la confederación asiática.",
+                "Su gobierno premió de forma histórica a los jugadores tras la victoria del 2022.",
+                "La inversión en su liga local ha atraído la mirada de todo el planeta fútbol."
+            ],
+            "Perú": [
+                "Estuvieron presentes en el primer mundial de la historia en Uruguay 1930.",
+                "Su generación dorada liderada por Teófilo Cubillas brilló con luz propia en México 1970.",
+                "Cubillas es uno de los máximos goleadores históricos de los mundiales con 10 tantos.",
+                "Regresaron de forma emotiva a un mundial en Rusia 2018 tras 36 años de ausencias.",
+                "Su camiseta blanca con la emblemática franja roja diagonal es considerada de las más hermosas.",
+                "En el mundial de Argentina 1978 clasificaron invictos en el primer lugar de su grupo.",
+                "Su afición ganó el premio FIFA Fan Award en 2018 por copar masivamente las ciudades rusas.",
+                "Se caracterizan históricamente por un juego de toque fino, picardía y alta posesión.",
+                "Su máximo goleador en eliminatorias generales es el delantero Paolo Guerrero.",
+                "Teodoro 'Lolo' Fernández es considerado el gran ídolo primitivo de su historia futbolística."
+            ],
+            "México": [
+                "Es el país que ha disputado más partidos inaugurales en la historia de los mundiales.",
+                "Ha sido el orgulloso organizador en solitario de dos ediciones históricas: 1970 y 1986.",
+                "En su tierra se coronaron las dos máximas deidades del fútbol: Pelé y Maradona.",
+                "Su mejor resultado histórico ha sido alcanzar los Cuartos de Final como locales.",
+                "La maldición del 'quinto partido' ha marcado sus últimas participaciones en octavos.",
+                "El central Rafael Márquez es de los pocos en capitanear en 5 mundiales distintos.",
+                "Comparten la organización de la Copa del Mundo 2026 junto a EE.UU. y Canadá.",
+                "Su estadio Azteca es el único en el mundo en albergar tres partidos inaugurales.",
+                "La fanaticada mexicana es famosa por inundar de color, mariachis y fiesta los mundiales.",
+                "Su uniforme tradicional es verde bandera, pantalón blanco y medias rojas."
+            ],
+            "Dinamarca": [
+                "Deslumbraron al planeta fútbol en México 1986 con el apodo de la 'Dinamita Danesa'.",
+                "Su mejor registro histórico fue alcanzar los Cuartos de Final en Francia 1998.",
+                "Michael y Brian Laudrup son considerados las mayores leyendas de su historia.",
+                "Ganaron la Eurocopa de 1992 tras ingresar de emergencia por la exclusión de Yugoslavia.",
+                "Mantienen un juego basado en el orden táctico, dinámica física y mentalidad fría.",
+                "Su uniforme clásico rojo y blanco de la marca Hummel es un ícono de diseño retro.",
+                "En el mundial de 1998 jugaron un partido memorable de cuartos perdiendo 3-2 ante Brasil.",
+                "Jon Dahl Tomasson es su máximo anotador histórico en fases finales mundialistas.",
+                "Su guardameta Peter Schmeichel es considerado de los mejores arqueros del siglo XX.",
+                "La unión y la fuerza colectiva marcan la pauta de todos sus procesos deportivos."
+            ],
+            "Túnez": [
+                "Hicieron historia en Argentina 1978 al ser el primer equipo africano en ganar un partido mundialista.",
+                "Se les conoce en el panorama del fútbol internacional como las Águilas de Cartago.",
+                "Su debut oficial en la gran vitrina de la FIFA se registró en el torneo de 1978.",
+                "A pesar de sus múltiples participaciones, nunca han logrado superar la fase de grupos.",
+                "En Catar 2022 consiguieron una victoria histórica de prestigio venciendo 1-0 a Francia.",
+                "Su uniforme estelar adopta los colores rojo y blanco en honor a su bandera nacional.",
+                "Su estilo destaca por el orden defensivo estricto y la intensidad en el mediocampo.",
+                "La mayoría de sus futbolistas compiten en la liga local tunecina o en el fútbol de Francia.",
+                "Mantienen una enconada rivalidad en el norte de África contra Argelia y Egipto.",
+                "Su distribución táctica es sumamente rocosa y difícil de penetrar en el campo."
+            ],
+            "Nueva Zelanda": [
+                "Lograron su primera e histórica clasificación para el Mundial de España 1982.",
+                "Hicieron una gesta increíble en Sudáfrica 2010 al terminar invictos en la fase de grupos.",
+                "En 2010 fueron el único equipo de todo el torneo que no perdió ningún partido.",
+                "Se les conoce popularmente en el ámbito deportivo internacional como los All Whites.",
+                "El fútbol compite directamente en popularidad contra el gigante nacional del rugby.",
+                "Su uniforme es completamente blanco, contraste directo con la vestimenta negra del rugby.",
+                "Consiguieron un empate histórico 1-1 ante la campeona vigente Italia en el año 2010.",
+                "Su delantero histórico leyenda y capitán en 2010 fue Ryan Nelsen.",
+                "La mayoría de sus jugadores compiten en la liga australiana o en el fútbol de Inglaterra.",
+                "Dominan de forma casi absoluta las eliminatorias correspondientes a la zona de Oceanía."
+            ],
+            "Chile": [
+                "Fueron los organizadores del séptimo mundial de la historia en el año 1962.",
+                "Consiguieron un histórico e inolvidable tercer lugar actuando como locales en el 62.",
+                "Leonel Sánchez fue uno de los máximos anotadores de su mundial con 4 goles.",
+                "Su identidad de juego agresiva quedó inmortalizada con esquemas de alta presión.",
+                "Se les conoce en todo el continente americano como la Roja.",
+                "La generación dorada liderada por Alexis y Arturo Vidal ganó dos Copas América.",
+                "Protagonizaron junto a Italia el partido ultra físico de 1962 conocido como la Batalla de Santiago.",
+                "Su goleador histórico en eliminatorias de la Conmebol es el delantero Iván Zamorano.",
+                "El Estadio Nacional de Santiago es el templo principal e histórico de la selección.",
+                "Fueron uno de los trece países pioneros en disputar el mundial de Uruguay 1930."
+            ],
+            "Austria": [
+                "Su época de oro se dio en los años 30 con el legendario equipo conocido como el Wunderteam.",
+                "Alcanzaron el tercer lugar del mundo en el torneo de Suiza 1954.",
+                "Su partido de 1954 contra Suiza terminó 7-5, el de mayor cantidad de goles registrados.",
+                "Su máximo ídolo es Matthias Sindelar, apodado 'El Mozart del fútbol'.",
+                "Se ausentaron del mundial de 1938 debido a coyunturas geopolíticas de la época.",
+                "Mantienen un clásico europeo de enorme rivalidad histórica frente a Hungría.",
+                "El uniforme tradicional combina de forma muy elegante camiseta blanca con pantalón negro.",
+                "En el Mundial de Argentina 1978 protagonizaron el 'Milagro de Córdoba' venciendo a Alemania.",
+                "Su referente moderno de mayor impacto internacional ha sido el polivalente David Alaba.",
+                "La estructura de formación local provee un juego dinámico y colectivo coordinado."
+            ],
+            "Egipto": [
+                "Fue el primer país de todo el continente africano en disputar un mundial (Italia 1934).",
+                "Su guardameta Essam El-Hadary es el jugador más longevo en jugar un mundial con 45 años.",
+                "Se les conoce en todo el mundo del deporte como los Faraones.",
+                "Son los reyes absolutos de la Copa Africana de Naciones con un récord de 7 títulos.",
+                "Su máxima deidad futbolística moderna es el delantero estrella Mohamed Salah.",
+                "Abdulrahman Fawzi fue el primer africano en anotar un gol en la historia de los mundiales.",
+                "El fútbol desata una pasión extrema en el país, dividida entre grandes clubes locales.",
+                "Su uniforme clásico es rojo brillante con detalles blancos y negros.",
+                "A pesar de su tremendo dominio continental, solo han logrado clasificar a tres mundiales.",
+                "Su fortín para los compromisos de eliminatorias suele ser el Estadio de El Cairo."
+            ],
+            "China": [
+                "Lograron su histórica y única clasificación mundialista para el torneo de Corea-Japón 2002.",
+                "Fueron dirigidos en su única experiencia por el trotamundos serbio Bora Milutinović.",
+                "En 2002 compartieron un grupo sumamente duro ante Brasil, Turquía y Costa Rica.",
+                "Mantiene un plan estratégico estatal para potenciar significativamente su fútbol base.",
+                "El legendario zaguero Sun Jihai fue de sus primeros jugadores en brillar en la Premier League.",
+                "Su uniforme estelar adopta el rojo brillante y amarillo, reflejo de su bandera nacional.",
+                "A pesar del apoyo corporativo local, trabajan intensamente para regresar a una fase final.",
+                "Su liga local experimentó una etapa de alta resonancia contratando estrellas mundiales.",
+                "Tienen una rivalidad asiática de enorme tensión frente a Corea del Sur y Japón.",
+                "Su federación fue fundada originalmente en 1924 y se afilió a la FIFA en 1931."
+            ],
+            "Senegal": [
+                "Deslumbraron al mundo en su debut en 2002 venciendo a la campeona vigente Francia.",
+                "En su primer mundial llegaron de forma espectacular hasta los Cuartos de Final.",
+                "Se les conoce internacionalmente en el fútbol como los Leones de la Teranga.",
+                "Su director técnico, Aliou Cissé, fue el capitán del equipo histórico de 2002.",
+                "Se coronaron campeones de África por primera vez en su historia en el año 2022.",
+                "Su jugador estrella Sadio Mané es considerado uno de los grandes astros africanos.",
+                "En Rusia 2018 fueron eliminados de forma insólita por el criterio de tarjetas.",
+                "Su estilo conjuga un despliegue físico portentoso con una velocidad letal por las bandas.",
+                "El recordado Papa Bouba Diop anotó el gol histórico del triunfo contra Francia en 2002.",
+                "La enorme mayoría de sus seleccionados militan en las ligas más importantes de Europa."
+            ],
+            "Serbia": [
+                "Heredó los registros estadísticos históricos de las antiguas selecciones de Yugoslavia.",
+                "Son conocidos popularmente en el entorno del fútbol europeo como las Águilas Blancas.",
+                "Destacan históricamente por producir mediocampistas de tremendo físico y fina técnica.",
+                "En Sudáfrica 2010 consiguieron una victoria histórica de prestigio venciendo 1-0 a Alemania.",
+                "Mantienen una intensa rivalidad balcánica de alta tensión frente a Croacia y Suiza.",
+                "Su uniforme clásico es completamente rojo con detalles azules y blancos.",
+                "El legendario Dragan Stojković es considerado uno de los mayores mitos de su fútbol.",
+                "La cantera local nutre constantemente a los clubes más importantes de Europa.",
+                "Su juego aéreo y potencia física son de sus principales argumentos de peso táctico.",
+                "Compiten bajo el nombre exclusivo de Serbia desde el año 2006 de forma independiente."
+            ],
+            "Camerún": [
+                "Hicieron historia en Italia 1990 al ser la primera selección africana en llegar a Cuartos.",
+                "El delantero Roger Milla anotó 4 goles celebrándolo con su famoso baile en el córner.",
+                "Se les conoce en todo el planeta fútbol como los Leones Indomables.",
+                "Su presidente de la federación es su máxima leyenda histórica, Samuel Eto'o.",
+                "En el Mundial de España 1982 quedaron eliminados de forma invicta con tres empates.",
+                "Son famosos por utilizar indumentarias revolucionarias en esquemas de diseño deportivo.",
+                "Eto'o es el único jugador africano en disputar cuatro Copas del Mundo distintas.",
+                "Tienen una rivalidad continental de alta tensión frente a Nigeria y Egipto.",
+                "Su victoria 1-0 ante la Argentina de Maradona en el partido inaugural del 90 sacudió al planeta.",
+                "Es una de las naciones africanas que más talentos ha exportado al fútbol internacional."
+            ],
+            "Costa Rica": [
+                "Firmaron la mayor hazaña de Centroamérica al llegar a Cuartos de Final en Brasil 2014.",
+                "En 2014 clasificaron primeros en el grupo ante Uruguay, Italia e Inglaterra.",
+                "Su guardameta Keylor Navas fue la gran figura, saltando de inmediato al Real Madrid.",
+                "Hicieron su gran debut histórico en la Copa del Mundo en la edición de Italia 1990.",
+                "Se les conoce cariñosamente en la Concacaf como los Ticos o la Sele.",
+                "El técnico serbio Bora Milutinović comandó la hazaña de clasificar a octavos en 1990.",
+                "Su uniforme tradicional se compone de camiseta roja, pantalón azul y medias blancas.",
+                "Su bloque colectivo destaca por un temperamento táctico sumamente disciplinado.",
+                "Mantienen el clásico centroamericano de alta intensidad frente a Honduras.",
+                "El lema nacional 'Pura Vida' acompaña siempre la identidad alegre de su delegación."
+            ],
             "Suecia": [
                 "Alcanzaron la gran final del mundo en 1958 actuando como el país anfitrión.",
                 "Cayeron en la final de 58 ante el Brasil de Pelé en un duelo repleto de anotaciones.",
@@ -871,7 +1291,7 @@
                 "Asamoah Gyan es el máximo goleador africano en la historia de los mundiales.",
                 "Hicieron su gran debut mundialista en la edición de Alemania 2006 avanzando a octavos.",
                 "En 2010 igualaron la gesta de Camerún y Senegal al meterse entre los ocho mejores.",
-                "Su uniforme blanco incorpora la icónica estrella negra de su bandera en el centro del pecho.",
+                "Su uniforme blanco incorpora la icónica estrella negra de su bandera en el pecho.",
                 "La velocidad física exhuberante y el ritmo competitivo marcan la pauta de su estilo.",
                 "Mantienen duelos de alta rivalidad en el continente africano contra Nigeria.",
                 "Su plantilla de 2010 contaba con una inmensa base de campeones juveniles internacionales.",
@@ -886,6 +1306,28 @@
             "Francia": ["25/06 vs Canadá 🏟️ Vancouver", "29/06 Octavos de Final ⏰ Confirmar"]
         };
 
+
+
+
+        // --- CONEXIÓN A SUPABASE ---
+const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBieHJxa2NrdGV0dWtxdGVod25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTQyMTMsImV4cCI6MjA5Nzg3MDIxM30.6OMrxTw-vslZtBwtiM3rK7ZAS4BalvfoEBon02cW12w';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// --- FUNCIÓN PARA DESCARGAR DATOS DE LA NUBE ---
+async function sincronizarQuinielasDeLaNube() {
+    // Descargamos todo lo que está en la tabla 'quinielas'
+    const { data, error } = await supabase.from('quinielas').select('*');
+    
+    if (data) {
+        // Actualizamos nuestro localStorage con lo que viene de la nube
+        data.forEach(fila => {
+            localStorage.setItem(`quiniela_${fila.usuario}`, JSON.stringify(fila.predicciones));
+        });
+        // Recalculamos la tabla para ver los puntos en tiempo real
+        actualizarTablaGeneral();
+    }
+}
         const poolMascotas = ["m1.png", "m2.png", "m3.png"];
         let mascotaAsignadaSesion = "m1.png";
 
@@ -1043,7 +1485,7 @@
             titularesValidos.push("🌴 ¡Tranquilito papá! Agárrenlo con calma que esto apenas está empezando y la quiniela da más vueltas que un trompo.");
             titularesValidos.push("📢 ¡De verdad que son un tiro al piso! Sigan inventando combinaciones raras con los equipos asiáticos y van a quedar en la lona.");
 
-            const titularFinal = titularesValidos[Math.floor(Math.random() * titular_final = titularesValidos.length)];
+            const titularFinal = titularesValidos[Math.floor(Math.random() * titularesValidos.length)];
             document.getElementById('texto-noticia').innerText = titularFinal;
         }
 
@@ -1077,11 +1519,11 @@
                 dibujarAlineacionCancha();
                 actualizarTablaGeneral();
                 renderizarArbolBanderas();
-                sincronizarQuinielasDeLaNube();
+                sincronizarQuinielasDeLaNube(); // <-- Agrega esta línea aquí
 
                 actualizarTitularesNoticiero();
                 setInterval(actualizarTitularesNoticiero, 45000);
-                setInterval(sincronizarQuinielasDeLaNube, 45000);
+                setInterval(sincronizarQuinielasDeLaNube, 45000); // <-- Agrega esta línea aquí
             } else {
                 errorMsg.style.display = 'block';
             }
@@ -1162,9 +1604,9 @@
             });
         }
 
-        function abrirModalMenuFases(esEditable, ...args) {
+        function abrirModalMenuFases(esEditable, nombreAmigo = "") {
             modalEsEditable = esEditable;
-            modalNombreAmigoActivo = args[0] || "";
+            modalNombreAmigoActivo = nombreAmigo;
             document.getElementById('modal-q').style.display = "flex";
             cambiarFaseVisualizacion('grupos');
         }
@@ -1228,93 +1670,33 @@
             }
         }
 
-        function renderizarArbolBanderas() {
-            inyectarBanderasColumna('b-izq-octavos', llaveEliminatoriaReal.izq.octavos, 2);
-            inyectarBanderasColumna('b-izq-cuartos', llaveEliminatoriaReal.izq.cuartos, 2);
-            inyectarBanderasColumna('b-izq-semi', llaveEliminatoriaReal.izq.semi, 1);
+async function guardarMiQuiniela() {
+    let misPredicciones = {};
+    Object.keys(gruposMundial).forEach(letra => {
+        const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
+        const seg = document.getElementById(`mod-grupo-${letra}-2do`).value;
+        misPredicciones[letra] = { "1ro": prim, "2do": seg };
+    });
 
-            const centroFinal = document.getElementById('b-centro-final');
-            if (centroFinal) {
-                const flagIzq = banderasPaises[llaveEliminatoriaReal.izq.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.izq.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
-                const flagDer = banderasPaises[llaveEliminatoriaReal.der.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.der.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
-                centroFinal.innerHTML = `${flagIzq} <span style="color:white; font-weight:bold; font-size:11px;">VS</span> ${flagDer}`;
-            }
+    // 1. Guardado local rápido
+    localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
+    
+    // 2. Subida a la nube de Supabase (Upsert actualiza si ya existe, crea si es nuevo)
+    const { error } = await supabase
+        .from('quinielas')
+        .upsert({ usuario: usuarioLogueado, predicciones: misPredicciones }, { onConflict: 'usuario' });
 
-            const centroCampeon = document.getElementById('b-centro-campeon');
-            if (centroCampeon) {
-                centroCampeon.innerHTML = banderasPaises[llaveEliminatoriaReal.campeon] ? 
-                    `<img class="bandera-bracket" style="width:45px; height:30px; border:2px solid gold;" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.campeon]}.svg">` : 
-                    `<div class="bandera-bracket" style="width:45px; height:30px; background:rgba(255,255,255,0.1); border:1px dashed var(--dorado);"></div>`;
-            }
+    if (error) {
+        alert("Hubo un error al subir a la nube: " + error.message);
+    } else {
+        alert("¡Tus predicciones se guardaron en la nube para todos tus amigos!");
+    }
 
-            inyectarBanderasColumna('b-der-semi', llaveEliminatoriaReal.der.semi, 1);
-            inyectarBanderasColumna('b-der-cuartos', llaveEliminatoriaReal.der.cuartos, 2);
-            inyectarBanderasColumna('b-der-octavos', llaveEliminatoriaReal.der.octavos, 2);
-        }
+    cerrarModal();
+    sincronizarQuinielasDeLaNube(); // Actualizamos la tabla general
+}
 
-        function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
-            const col = document.getElementById(idContenedor);
-            if (!col) return;
-            col.innerHTML = "";
-            for (let i = 0; i < listaPaises.length; i += agruparPor) {
-                const bloque = document.createElement('div');
-                bloque.classList.add('pareja-bloque');
-                for (let j = 0; j < agruparPor; j++) {
-                    const pais = listaPaises[i + j];
-                    if (pais && banderasPaises[pais]) {
-                        const img = document.createElement('img');
-                        img.classList.add('bandera-bracket');
-                        img.src = `https://flagcdn.com/${banderasPaises[pais]}.svg`;
-                        bloque.appendChild(img);
-                    } else {
-                        const slotVacio = document.createElement('div');
-                        slotVacio.classList.add('bandera-bracket');
-                        slotVacio.style.background = "rgba(255,255,255,0.05)";
-                        bloque.appendChild(slotVacio);
-                    }
-                }
-                col.appendChild(bloque);
-            }
-        }
-
-        // --- ENLACE INTEGRAL NUBE DE SUPABASE ---
-        const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBieHJxa2NrdGV0dWtxdGVod25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTQyMTMsImV4cCI6MjA5Nzg3MDIxM30.6OMrxTw-vslZtBwtiM3rK7ZAS4BalvfoEBon02cW12w';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        async function sincronizarQuinielasDeLaNube() {
-            const { data, error } = await supabase.from('quinielas').select('*');
-            if (data) {
-                data.forEach(fila => {
-                    localStorage.setItem(`quiniela_${fila.usuario}`, JSON.stringify(fila.predicciones));
-                });
-                actualizarTablaGeneral();
-            }
-        }
-
-        async function guardarMiQuiniela() {
-            let misPredicciones = {};
-            Object.keys(gruposMundial).forEach(letra => {
-                const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
-                const seg = document.getElementById(`mod-grupo-${letra}-2do`).value;
-                misPredicciones[letra] = { "1ro": prim, "2do": seg };
-            });
-
-            localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
-            
-            const { error } = await supabase
-                .from('quinielas')
-                .upsert({ usuario: usuarioLogueado, predicciones: misPredicciones }, { onConflict: 'usuario' });
-
-            if (error) {
-                alert("Error al sincronizar con la nube: " + error.message);
-            } else {
-                alert("¡Tus predicciones se guardaron y compartieron en tiempo real!");
-            }
-
-            cerrarModal();
-            sincronizarQuinielasDeLaNube();
-        }
+        function cerrarModal() { document.getElementById('modal-q').style.display = "none"; }
 
         function calcularAciertosUsuario(nombreUsuario) {
             const datos = localStorage.getItem(`quiniela_${nombreUsuario}`);
