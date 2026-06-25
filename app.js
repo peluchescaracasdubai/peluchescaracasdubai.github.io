@@ -2,6 +2,7 @@ let mascotaAsignadaSesion = "m1.png";
 let usuarioLogueado = "";
 let modalEsEditable = true;
 let modalNombreAmigoActivo = "";
+let juegoVisible = false;
 
 window.onload = function() {
     const select = document.getElementById('select-favorito');
@@ -35,6 +36,12 @@ function intentarLogin() {
         actualizarTablaGeneral();
         renderizarArbolBanderas();
 
+        // --- ENGANCHE CON SUPABASE (DATABASE.JS) ---
+        if (typeof sincronizarTodoDesdeLaNube === 'function') {
+            sincronizarTodoDesdeLaNube(); // Descarga todo al entrar
+            setInterval(sincronizarTodoDesdeLaNube, 30000); // Revisa internet cada 30 segundos
+        }
+
         actualizarTitularesNoticiero();
         setInterval(actualizarTitularesNoticiero, 45000);
     } else {
@@ -57,6 +64,12 @@ function procesarFoto(event) {
     lector.onload = function() {
         localStorage.setItem(`foto_${usuarioLogueado}`, lector.result);
         document.getElementById('mi-avatar').src = lector.result;
+        
+        // --- ENVÍA LA FOTO A LA NUBE (DATABASE.JS) ---
+        if (typeof subirFotoALaNube === 'function') {
+            subirFotoALaNube(usuarioLogueado, lector.result);
+        }
+        
         dibujarAlineacionCancha();
     }
     lector.readAsDataURL(event.target.files[0]);
@@ -242,6 +255,11 @@ function guardarMiQuiniela() {
 
     localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
     
+    // --- ENVÍA LOS PRONÓSTICOS A INTERNET (DATABASE.JS) ---
+    if (typeof subirQuinielaALaNube === 'function') {
+        subirQuinielaALaNube(usuarioLogueado, misPredicciones);
+    }
+    
     alert("¡Tus predicciones se guardaron correctamente!");
     cerrarModal();
     actualizarTablaGeneral();
@@ -276,6 +294,7 @@ function calcularAciertosUsuario(nombreUsuario) {
 
 function actualizarTablaGeneral() {
     const cuerpo = document.getElementById('cuerpo-tabla');
+    if (!cuerpo) return;
     cuerpo.innerHTML = "";
 
     const listaOrdenada = Object.keys(credenciales).map(nombre => {
@@ -352,7 +371,8 @@ function actualizarTitularesNoticiero() {
     titularesValidos.push("📢 ¡De verdad que son un tiro al piso! Sigan inventando combinaciones raras con los equipos asiáticos y van a quedar en la lona.");
 
     const titularFinal = titularesValidos[Math.floor(Math.random() * titularesValidos.length)];
-    document.getElementById('texto-noticia').innerText = titularFinal;
+    const elNoticia = document.getElementById('texto-noticia');
+    if (elNoticia) elNoticia.innerText = titularFinal;
 }
 
 // --- MANEJADOR DRAG AND DROP NATIVO ---
@@ -435,8 +455,6 @@ function cerrarSesion() {
 }
 
 // --- LÓGICA DEL MINIJUEGO DE FÚTBOL ---
-let juegoVisible = false;
-
 function toggleJuego() {
     const bloqueJuego = document.getElementById('frame-juego');
     const bloqueCancha = document.querySelector('.bloque-superior-juego');
@@ -445,19 +463,13 @@ function toggleJuego() {
     juegoVisible = !juegoVisible;
 
     if (juegoVisible) {
-        // 1. Le inyectamos el archivo para que cargue e inicie el juego justo ahora
         bloqueJuego.src = "juego.html"; 
-        
-        // 2. Cambios visuales
         bloqueCancha.style.display = 'none';
         bloqueJuego.style.display = 'block';
         btnJuego.innerText = '⚽ Volver a la Quiniela Peluchón!! ';
         btnJuego.style.background = '#cc2424'; 
     } else {
-        // 1. Lo volvemos a vaciar para que el juego se destruya y la música se apague al instante
         bloqueJuego.removeAttribute('src'); 
-        
-        // 2. Cambios visuales
         bloqueCancha.style.display = 'block';
         bloqueJuego.style.display = 'none';
         btnJuego.innerText = '🎮 Jugar Minijuego';
