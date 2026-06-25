@@ -1,4 +1,7 @@
-let mascotaAsignadaSesion = "m1.png";
+// Variable de control global para evitar que se pisen las sesiones
+if (typeof window.mascotaAsignadaSesion === 'undefined') {
+    window.mascotaAsignadaSesion = "m1.png";
+}
 let usuarioLogueado = "";
 let modalEsEditable = true;
 let modalNombreAmigoActivo = "";
@@ -354,7 +357,7 @@ function actualizarTitularesNoticiero() {
             else titularesValidos.push(`👑 Rey de la cancha: ${lider.nombre} domina el primer puesto en solitario. Los demás están remando en el barro.`);
         } 
         if (lider.datos.total === segundo.datos.total) {
-            const empatadosLideres = listaOrdenada.filter(amigo => amigo.datos.total === lider.datos.total).map(amigo => amigo.nombre);
+            const empatados Lideres = listaOrdenada.filter(amigo => amigo.datos.total === lider.datos.total).map(amigo => amigo.nombre);
             titularesValidos.push(`⚠️ ¡Tremendo bonche en la punta! Tenemos un empate técnico entre ${empatadosLideres.join(' y ')} con ${lider.datos.total} puntos.`);
         }
         for (let i = 1; i < listaOrdenada.length - 1; i++) {
