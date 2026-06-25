@@ -2,7 +2,7 @@
 const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
 const supabaseKey = 'sb_publishable_s0eLXKp2okSYwppwrQvEVw_JNMKCIKw';
 
-// Usamos clientSupabase para evitar choques con las variables globales de la librería CDN
+// Conexión limpia con alias para evitar choques globales
 const clientSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- 1. DESCARGAR TODO DESDE LA NUBE ---
@@ -39,7 +39,6 @@ async function subirQuinielaALaNube(usuario, predicciones) {
     try {
         console.log(`📤 Subiendo pronósticos de la quiniela de ${usuario}...`);
         
-        // Al ser 'usuario' la Primary Key, upsert guarda directo o actualiza si ya existe
         const { error } = await clientSupabase
             .from('quinielas')
             .upsert({ 
@@ -60,8 +59,6 @@ async function subirFotoALaNube(usuario, archivoImagen) {
     try {
         console.log(`📤 Subiendo archivo de imagen de ${usuario} al Storage...`);
         
-        // Subimos el archivo adjunto real a la carpeta pública 'avatares' con el nombre del usuario
-        // Usamos upsert: true para que si ya existe la foto, la reemplace/sobreescriba en silencio
         const { error } = await clientSupabase.storage
             .from('avatares')
             .upload(`${usuario}.png`, archivoImagen, {
@@ -71,11 +68,9 @@ async function subirFotoALaNube(usuario, archivoImagen) {
 
         if (error) throw error;
         
-        // Generamos su ruta estática y la guardamos en local para uso inmediato
         const urlFotoPublica = `${supabaseUrl}/storage/v1/object/public/avatares/${usuario}.png`;
         localStorage.setItem(`foto_${usuario}`, urlFotoPublica);
         
-        // Aseguramos que la fila del usuario exista en la tabla para que aparezca en la cancha
         await clientSupabase.from('quinielas').upsert({ usuario: usuario });
 
         console.log("✅ Foto guardada y reemplazada con éxito en el Storage.");
