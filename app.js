@@ -3,16 +3,9 @@ let usuarioLogueado = "";
 let modalEsEditable = true;
 let modalNombreAmigoActivo = "";
 
-// --- CONEXIÓN SEGURA A SUPABASE ---
-let supabase = null;
-if (typeof window.supabase !== 'undefined') {
-    const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBieHJxa2NrdGV0dWtxdGVod25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTQyMTMsImV4cCI6MjA5Nzg3MDIxM30.6OMrxTw-vslZtBwtiM3rK7ZAS4BalvfoEBon02cW12w';
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-}
-
 window.onload = function() {
     const select = document.getElementById('select-favorito');
+    // Genera la lista de países en orden alfabético
     Object.keys(banderasPaises).sort().forEach(pais => {
         const opt = document.createElement('option');
         opt.value = pais; opt.innerText = pais;
@@ -41,11 +34,6 @@ function intentarLogin() {
         dibujarAlineacionCancha();
         actualizarTablaGeneral();
         renderizarArbolBanderas();
-        
-        if (supabase) {
-            sincronizarQuinielasDeLaNube();
-            setInterval(sincronizarQuinielasDeLaNube, 45000);
-        }
 
         actualizarTitularesNoticiero();
         setInterval(actualizarTitularesNoticiero, 45000);
@@ -244,18 +232,7 @@ function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
     }
 }
 
-async function sincronizarQuinielasDeLaNube() {
-    if (!supabase) return;
-    const { data, error } = await supabase.from('quinielas').select('*');
-    if (data) {
-        data.forEach(fila => {
-            localStorage.setItem(`quiniela_${fila.usuario}`, JSON.stringify(fila.predicciones));
-        });
-        actualizarTablaGeneral();
-    }
-}
-
-async function guardarMiQuiniela() {
+function guardarMiQuiniela() {
     let misPredicciones = {};
     Object.keys(gruposMundial).forEach(letra => {
         const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
@@ -265,18 +242,13 @@ async function guardarMiQuiniela() {
 
     localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
     
-    if (supabase) {
-        const { error } = await supabase.from('quinielas').upsert({ usuario: usuarioLogueado, predicciones: misPredicciones }, { onConflict: 'usuario' });
-        if (error) {
-            alert("Error al sincronizar con la nube: " + error.message);
-        } else {
-            alert("¡Tus predicciones se guardaron y compartieron en tiempo real!");
-        }
-    }
-
+    alert("¡Tus predicciones se guardaron correctamente!");
     cerrarModal();
-    if (supabase) sincronizarQuinielasDeLaNube();
-    else actualizarTablaGeneral();
+    actualizarTablaGeneral();
+}
+
+function cerrarModal() { 
+    document.getElementById('modal-q').style.display = "none"; 
 }
 
 function calcularAciertosUsuario(nombreUsuario) {
@@ -350,7 +322,7 @@ function actualizarTitularesNoticiero() {
     const ceroAciertos = listaOrdenada.find(amigo => amigo.registrado && amigo.datos.total === 0);
     if (ceroAciertos) titularesValidos.push(`🚨 ¡Ay papá! ${ceroAciertos.nombre} lleva la brújula totalmente dañada: ¡cero aciertos! No le pega un tiro al piso.`);
 
-    if (lider.datos.total > 0) {
+    if (lider && lider.datos.total > 0) {
         const liderSolitario = lider.datos.total > segundo.datos.total;
         if (liderSolitario) {
             const diferenciaConSegundo = lider.datos.total - segundo.datos.total;
