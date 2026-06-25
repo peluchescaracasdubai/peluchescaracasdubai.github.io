@@ -1,4 +1,4 @@
-// --- CONEXIÓN DE SEGURIDAD A SUPABASE ---
+// --- CONEXIÓN DE SEGURIDAD ---
 const supabaseUrl = 'https://pbxrqkcktetukqtehwns.supabase.co';
 const supabaseKey = 'sb_publishable_s0eLXKp2okSYwppwrQvEVw_JNMKCIKw';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
