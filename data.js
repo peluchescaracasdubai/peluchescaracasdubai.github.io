@@ -33,6 +33,26 @@ const gruposMundial = {
     "L": ["Suecia", "Polonia", "Ghana", "Argentina"]
 };
 
+// --- NUEVA ESTRUCTURA: MAPEO DE LOS DIECISEISAVOS DE FINAL (16 llaves, 32 equipos) ---
+const llavesDieciseisavos = {
+    "L1": ["1ro Grupo A", "2do Grupo B"],
+    "L2": ["1ro Grupo C", "2do Grupo D"],
+    "L3": ["1ro Grupo E", "2do Grupo F"],
+    "L4": ["1ro Grupo G", "2do Grupo H"],
+    "L5": ["1ro Grupo I", "2do Grupo J"],
+    "L6": ["1ro Grupo K", "2do Grupo L"],
+    "L7": ["1ro Grupo B", "2do Grupo A"],
+    "L8": ["1ro Grupo D", "2do Grupo C"],
+    "L9": ["1ro Grupo F", "2do Grupo E"],
+    "L10": ["1ro Grupo H", "2do Grupo G"],
+    "L11": ["1ro Grupo J", "2do Grupo I"],
+    "L12": ["1ro Grupo L", "2do Grupo K"],
+    "L13": ["Mejor 3ro 1", "Mejor 3ro 2"],
+    "L14": ["Mejor 3ro 3", "Mejor 3ro 4"],
+    "L15": ["Mejor 3ro 5", "Mejor 3ro 6"],
+    "L16": ["Mejor 3ro 7", "Mejor 3ro 8"]
+};
+
 const resultadosReales = {
     "A": { "1ro": "Argentina", "2do": "Francia" }, "B": { "1ro": "España", "2do": "Alemania" },
     "C": { "1ro": "Brasil", "2do": "Portugal" }, "D": { "1ro": "Italia", "2do": "Bélgica" },
@@ -42,15 +62,17 @@ const resultadosReales = {
     "K": { "1ro": "Senegal", "2do": "Serbia" }, "L": { "1ro": "Suecia", "2do": "Polonia" }
 };
 
-// --- DATA DE LA RED ELIMINATORIA REAL (Deja vacío lo que aún no se ha jugado) ---
+// --- DATA DE LA RED ELIMINATORIA REAL (Para tu Bracket dinámico) ---
 const llaveEliminatoriaReal = {
     izq: {
+        dieciseisavos: ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         octavos: ["", "", "", "", "", "", "", ""], 
         cuartos: ["", "", "", ""],
         semi: ["", ""],
         finalista: ""
     },
     der: {
+        dieciseisavos: ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         octavos: ["", "", "", "", "", "", "", ""],
         cuartos: ["", "", "", ""],
         semi: ["", ""],
@@ -64,7 +86,7 @@ const poolCuriosidades = {
         "Utilizó un balón de fabricación local en la primera final de Uruguay 1930.",
         "Es el combinado nacional que más tandas de penales ha ganado en mundiales.",
         "Diego Armando Maradona ostenta el récord de más faltas recibidas en un torneo (53).",
-        "Los bastones clásicos celestes y blancos aparecieron por primera vez en 1908.",
+        "Los bastones clásicos celestes y whites aparecieron por primera vez en 1908.",
         "Guillermo Stábile se consagró como el primer máximo goleador del torneo.",
         "Lionel Messi es el jugador con más presencias en fases finales mundiales.",
         "Alcanzaron su primer trofeo actuando como el país anfitrión en 1978.",
@@ -118,7 +140,7 @@ const poolCuriosidades = {
         "Fue la primera escuadra europea en ganar el campeonato fuera de su continente.",
         "Consiguieron un invicto histórico internacional de 35 compromisos seguidos.",
         "Gavi se convirtió en su goleador más joven en la historia de la Copa de la FIFA.",
-        "La mítica e inolvidable mascota oficial de su edición en 1982 fue Naranjito."
+        "La mítica e unforgettable mascota oficial de su edición en 1982 fue Naranjito."
     ],
     "Alemania": [
         "Es uno de los equipos más consistentes con 4 estrellas de campeonato en su haber.",
@@ -150,7 +172,7 @@ const poolCuriosidades = {
         "Enner Valencia es el máximo goleador ecuatoriano en fases finales con 6 tantos.",
         "Hicieron historia al ganar el partido inaugural de 2022 al país anfitrión.",
         "Su primera victoria en un mundial fue contra Croacia con gol de Edison Méndez.",
-        "Son conocidos cariñosamente en Latinoamérica como la Tri.",
+        "Son conocidos cariñosamente en Latinoamerica como la Tri.",
         "El histórico zaguero Iván Hurtado ostenta el récord de más partidos con la selección.",
         "Su fortín tradicional para eliminatorias siempre ha sido la altura de Quito.",
         "En el mundial de 2006 vistieron un uniforme amarillo brillante muy llamativo.",
@@ -224,7 +246,7 @@ const poolCuriosidades = {
         "En México 1986 llegaron a semifinales inspirados por el talento de Enzo Scifo.",
         "Su guardameta Thibaut Courtois ganó el Guante de Oro en la edición de 2018.",
         "Es un país trilingüe, por lo que su escudo lleva las siglas en francés y flamenco.",
-        "Tienen una larga tradición de esquemas tácticos de alta flexibilidad y posesión.",
+        "Tienen una larga tradición de esquemas de alta flexibilidad y posesión.",
         "Su uniforme estelar resalta los colores negro, amarillo y rojo de su bandera.",
         "Mantienen un clásico de frontera de alta rivalidad contra los Países Bajos."
     ],
@@ -277,8 +299,8 @@ const poolCuriosidades = {
         "Su uniforme clásico se compone de camiseta blanca y pantalón azul marino."
     ],
     "Australia": [
-        "Clasificaron a su primer mundial en la edición de Alemania 1974.",
-        "Cambiaron de confederación deportiva de Oceanía a Asia para elevar su nivel.",
+        "Clasificaron a su primer mundial en la lejana edición de Alemania 1974.",
+        "Cambiaron de confederación de Oceanía a Asia para elevar su nivel.",
         "Se les conoce mundialmente en todas las disciplinas como los Socceroos.",
         "Su jugador leyenda Tim Cahill anotó en tres mundiales diferentes.",
         "Su mejor registro ha sido avanzar a los Octavos de Final en 2006 y 2022.",
@@ -627,10 +649,10 @@ const poolCuriosidades = {
 };
 
 const baseCalendarios = {
-    "España": ["25/06 vs Japón 🏟️ Azteca", "29/06 Octavos de Final ⏰ Confirmar"],
-    "Argentina": ["24/06 vs Marruecos 🏟️ LA", "29/06 Octavos de Final ⏰ Confirmar"],
-    "Brasil": ["26/06 vs Portugal 🏟️ Miami", "30/06 Octavos de Final ⏰ Confirmar"],
-    "Francia": ["25/06 vs Canadá 🏟️ Vancouver", "29/06 Octavos de Final ⏰ Confirmar"]
+    "España": ["25/06 vs Japón 🏟️ Azteca", "29/06 Dieciseisavos de Final ⏰ Confirmar"],
+    "Argentina": ["24/06 vs Marruecos 🏟️ LA", "29/06 Dieciseisavos de Final ⏰ Confirmar"],
+    "Brasil": ["26/06 vs Portugal 🏟️ Miami", "30/06 Dieciseisavos de Final ⏰ Confirmar"],
+    "Francia": ["25/06 vs Canadá 🏟️ Vancouver", "29/06 Dieciseisavos de Final ⏰ Confirmar"]
 };
 
 const poolMascotas = ["m1.png", "m2.png", "m3.png"];
