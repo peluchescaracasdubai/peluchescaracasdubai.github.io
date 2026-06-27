@@ -62,21 +62,17 @@ function cargarDatosPerfil() {
     actualizarEquipoFavorito(favGuardado);
 }
 
-// --- CORREGIDO: ENVÍA EL ADJUNTO REAL EN LUGAR DE BASE64 ---
 function procesarFoto(event) {
     const archivoImagen = event.target.files[0];
     if (!archivoImagen) return;
 
-    // 1. Mostrar vista previa inmediata en pantalla de forma local
     const urlLocal = URL.createObjectURL(archivoImagen);
     document.getElementById('mi-avatar').src = urlLocal;
     
-    // 2. Enviar el archivo binario real directamente al Storage de Supabase
     if (typeof subirFotoALaNube === 'function') {
         subirFotoALaNube(usuarioLogueado, archivoImagen);
     }
     
-    // 3. Redibujar la cancha localmente
     setTimeout(() => {
         if (typeof dibujarAlineacionCancha === 'function') dibujarAlineacionCancha();
     }, 500);
@@ -140,7 +136,25 @@ function dibujarAlineacionCancha() {
 function abrirModalMenuFases(esEditable, nombreAmigo = "") {
     modalEsEditable = esEditable;
     modalNombreAmigoActivo = nombreAmigo;
+    
+    // Si soy yo editando pero YA tengo datos guardados en LocalStorage/Nube, bloqueamos edición
+    if (esEditable && localStorage.getItem(`quiniela_${usuarioLogueado}`)) {
+        modalEsEditable = false;
+        modalNombreAmigoActivo = usuarioLogueado;
+    }
+
     document.getElementById('modal-q').style.display = "flex";
+    
+    // Inicializar los botones de las pestañas del modal
+    const tabGrupos = document.getElementById('fase-tab-grupos');
+    const tabOctavos = document.getElementById('fase-tab-octavos');
+    
+    if (tabGrupos && tabOctavos) {
+        tabGrupos.innerText = "⚽ Fase de Grupos (A-L)";
+        tabOctavos.innerText = "⚔️ Dieciseisavos de Final";
+        tabOctavos.disabled = false; // Habilitamos Dieciseisavos
+    }
+
     cambiarFaseVisualizacion('grupos');
 }
 
@@ -148,22 +162,37 @@ function cambiarFaseVisualizacion(fase) {
     const grid = document.getElementById('modal-grid-grupos');
     const btnGuardar = document.getElementById('btn-modal-guardar');
     const titulo = document.getElementById('modal-titulo');
+    
+    // Cambiar clases activas en los botones de navegación
+    document.querySelectorAll('.btn-fase').forEach(b => b.classList.remove('activa'));
+    if (fase === 'grupos') document.getElementById('fase-tab-grupos')?.classList.add('activa');
+    if (fase === 'dieciseisavos') document.getElementById('fase-tab-octavos')?.classList.add('activa');
+
     grid.innerHTML = "";
 
+    const targetUser = modalNombreAmigoActivo || usuarioLogueado;
+    const datosTarget = JSON.parse(localStorage.getItem(`quiniela_${targetUser}`)) || {};
+    const yaTieneQuiniela = localStorage.getItem(`quiniela_${targetUser}`) !== null;
+
+    // Configurar el título del Modal según el contexto
+    if (targetUser === usuarioLogueado) {
+        titulo.innerHTML = modalEsEditable 
+            ? "📝 Rellena tus Predicciones Mundialistas" 
+            : `<div style="color:#d32f2f; text-align:center; font-size:14px; background:#ffebee; padding:8px; border-radius:6px; font-weight:bold;">⚠️ Estas son tus predicciones peluchon, estás seguro de ellas, mira que luego no podrás cambiarla y si no te gusta vaya a llorar pal valle!</div>`;
+    } else {
+        titulo.innerText = `Pronósticos de ${targetUser}`;
+    }
+
+    // El botón guardar solo aparece si la fase es editable y el usuario no tiene registros previos
+    btnGuardar.style.display = (modalEsEditable && !yaTieneQuiniela) ? "block" : "none";
+
     if (fase === 'grupos') {
-        titulo.innerText = modalEsEditable ? "Mis Pronósticos a Octavos de Final" : `Pronósticos de ${modalNombreAmigoActivo}`;
-        btnGuardar.style.display = modalEsEditable ? "block" : "none";
-
-        const datosTarget = modalEsEditable ? 
-            (JSON.parse(localStorage.getItem(`quiniela_${usuarioLogueado}`)) || {}) : 
-            (JSON.parse(localStorage.getItem(`quiniela_${modalNombreAmigoActivo}`)) || {});
-
         Object.keys(gruposMundial).forEach(letra => {
             const equipos = gruposMundial[letra];
             const tarjeta = document.createElement('div');
             tarjeta.classList.add('tarjeta-grupo');
 
-            if (modalEsEditable) {
+            if (modalEsEditable && !yaTieneQuiniela) {
                 let opciones = `<option value="">-- Seleccionar --</option>`;
                 equipos.forEach(eq => { opciones += `<option value="${eq}">${eq}</option>`; });
 
@@ -171,7 +200,7 @@ function cambiarFaseVisualizacion(fase) {
                     <h4>Grupo ${letra}</h4>
                     ${equipos.map(eq => `
                         <div class="fila-bandera">
-                            <img class="bandera-img" src="https://flagcdn.com/${banderasPaises[eq]}.svg">
+                            <img class="bandera-img" src="https://flagcdn.com/${banderasPaises[eq] || 'un'}.svg">
                             <span>${eq}</span>
                         </div>
                     `).join('')}
@@ -182,20 +211,56 @@ function cambiarFaseVisualizacion(fase) {
                 `;
                 grid.appendChild(tarjeta);
 
-                if (datosTarget[letra]) {
-                    document.getElementById(`mod-grupo-${letra}-1ro`).value = datosTarget[letra]["1ro"] || "";
+                if (datosTarget.grupos?.[letra]) {
+                    document.getElementById(`mod-grupo-${letra}-1ro`).value = datosTarget.grupos[letra]["1ro"] || "";
                     document.getElementById(`mod-grupo-${letra}-2do`).value = datosTarget[letra]["2do"] || "";
                 }
             } else {
-                let v1 = datosTarget[letra]?.["1ro"] || "No elegido";
-                let v2 = datosTarget[letra]?.["2do"] || "No elegido";
-                let flag1 = banderasPaises[v1] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[v1]}.svg">` : "";
-                let flag2 = banderasPaises[v2] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[v2]}.svg">` : "";
+                let v1 = datosTarget.grupos?.[letra]? MiniVoto("1ro", datosTarget.grupos[letra]["1ro"]) : "❌ Sin elegir";
+                let v2 = datosTarget.grupos?.[letra]? MiniVoto("2do", datosTarget.grupos[letra]["2do"]) : "❌ Sin elegir";
 
                 tarjeta.innerHTML = `
                     <h4>Grupo ${letra}</h4>
-                    <div class="voto-vista">🥇 1ro: ${flag1} <b>${v1}</b></div>
-                    <div class="voto-vista">🥈 2do: ${flag2} <b>${v2}</b></div>
+                    <div style="margin-top:8px;">${v1}</div>
+                    <div style="margin-top:5px;">${v2}</div>
+                `;
+                grid.appendChild(tarjeta);
+            }
+        });
+    }
+
+    if (fase === 'dieciseisavos') {
+        Object.keys(llavesDieciseisavos).forEach(idLlave => {
+            const opcionesLlave = llavesDieciseisavos[idLlave];
+            const tarjeta = document.createElement('div');
+            tarjeta.classList.add('tarjeta-grupo');
+            tarjeta.style.borderColor = "var(--dorado)";
+
+            if (modalEsEditable && !yaTieneQuiniela) {
+                let opcionesHTML = `<option value="">-- Seleccionar Ganador --</option>`;
+                Object.keys(banderasPaises).sort().forEach(pais => {
+                    opcionesHTML += `<option value="${pais}">${pais}</option>`;
+                });
+
+                tarjeta.innerHTML = `
+                    <h4>Llave ${idLlave}</h4>
+                    <p style="font-size:10px; color:#777; margin-bottom:5px;">${opcionesLlave[0]} vs ${opcionesLlave[1]}</p>
+                    <label style="font-size:11px; font-weight:bold; display:block;">🏆 Pasa a Octavos:</label>
+                    <select class="selector-clasificado" id="mod-llave-${idLlave}">${opcionesHTML}</select>
+                `;
+                grid.appendChild(tarjeta);
+
+                if (datosTarget.dieciseisavos?.[idLlave]) {
+                    document.getElementById(`mod-llave-${idLlave}`).value = datosTarget.dieciseisavos[idLlave] || "";
+                }
+            } else {
+                let ganador = datosTarget.dieciseisavos?.[idLlave] || "No elegido";
+                let flagG = banderasPaises[ganador] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[ganador]}.svg">` : "";
+
+                tarjeta.innerHTML = `
+                    <h4>Llave ${idLlave}</h4>
+                    <p style="font-size:10px; color:#777; margin-bottom:5px;">${opcionesLlave[0]} vs ${opcionesLlave[1]}</p>
+                    <div class="voto-vista">🚀 Avanza: ${flagG} <b>${ganador}</b></div>
                 `;
                 grid.appendChild(tarjeta);
             }
@@ -203,71 +268,60 @@ function cambiarFaseVisualizacion(fase) {
     }
 }
 
-function renderizarArbolBanderas() {
-    inyectarBanderasColumna('b-izq-octavos', llaveEliminatoriaReal.izq.octavos, 2);
-    inyectarBanderasColumna('b-izq-cuartos', llaveEliminatoriaReal.izq.cuartos, 2);
-    inyectarBanderasColumna('b-izq-semi', llaveEliminatoriaReal.izq.semi, 1);
-
-    const centroFinal = document.getElementById('b-centro-final');
-    if (centroFinal) {
-        const flagIzq = banderasPaises[llaveEliminatoriaReal.izq.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.izq.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
-        const flagDer = banderasPaises[llaveEliminatoriaReal.der.finalista] ? `<img class="bandera-bracket" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.der.finalista]}.svg">` : `<div class="bandera-bracket" style="background:rgba(255,255,255,0.1);"></div>`;
-        centroFinal.innerHTML = `${flagIzq} <span style="color:white; font-weight:bold; font-size:11px;">VS</span> ${flagDer}`;
-    }
-
-    const centroCampeon = document.getElementById('b-centro-campeon');
-    if (centroCampeon) {
-        centroCampeon.innerHTML = banderasPaises[llaveEliminatoriaReal.campeon] ? 
-            `<img class="bandera-bracket" style="width:45px; height:30px; border:2px solid gold;" src="https://flagcdn.com/${banderasPaises[llaveEliminatoriaReal.campeon]}.svg">` : 
-            `<div class="bandera-bracket" style="width:45px; height:30px; background:rgba(255,255,255,0.1); border:1px dashed var(--dorado);"></div>`;
-    }
-
-    inyectarBanderasColumna('b-der-semi', llaveEliminatoriaReal.der.semi, 1);
-    inyectarBanderasColumna('b-der-cuartos', llaveEliminatoriaReal.der.cuartos, 2);
-    inyectarBanderasColumna('b-der-octavos', llaveEliminatoriaReal.der.octavos, 2);
-}
-
-function inyectarBanderasColumna(idContenedor, listaPaises, agruparPor) {
-    const col = document.getElementById(idContenedor);
-    if (!col) return;
-    col.innerHTML = "";
-    for (let i = 0; i < listaPaises.length; i += agruparPor) {
-        const bloque = document.createElement('div');
-        bloque.classList.add('pareja-bloque');
-        for (let j = 0; j < agruparPor; j++) {
-            const pais = listaPaises[i + j];
-            if (pais && banderasPaises[pais]) {
-                const img = document.createElement('img');
-                img.classList.add('bandera-bracket');
-                img.src = `https://flagcdn.com/${banderasPaises[pais]}.svg`;
-                bloque.appendChild(img);
-            } else {
-                const slotVacio = document.createElement('div');
-                slotVacio.classList.add('bandera-bracket');
-                slotVacio.style.background = "rgba(255,255,255,0.05)";
-                bloque.appendChild(slotVacio);
-            }
-        }
-        col.appendChild(bloque);
-    }
+function MiniVoto(puesto, pais) {
+    if (!pais) return "❌ Sin elegir";
+    let flag = banderasPaises[pais] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[pais]}.svg">` : "";
+    return `${puesto === '1ro' ? '🥇 1ro:' : '🥈 2do:'} ${flag} <b>${pais}</b>`;
 }
 
 function guardarMiQuiniela() {
-    let misPredicciones = {};
+    if (localStorage.getItem(`quiniela_${usuarioLogueado}`)) {
+        alert("¡Ya tienes una quiniela registrada y no puedes modificarla!");
+        return;
+    }
+
+    let paqueteQuiniela = {
+        grupos: {},
+        dieciseisavos: {}
+    };
+
+    let incompleto = false;
+
+    // 1. Recopilar datos de la fase de grupos
     Object.keys(gruposMundial).forEach(letra => {
-        const prim = document.getElementById(`mod-grupo-${letra}-1ro`).value;
-        const seg = document.getElementById(`mod-grupo-${letra}-2do`).value;
-        misPredicciones[letra] = { "1ro": prim, "2do": seg };
+        const el1ro = document.getElementById(`mod-grupo-${letra}-1ro`);
+        const el2do = document.getElementById(`mod-grupo-${letra}-2do`);
+        
+        const prim = el1ro ? el1ro.value : "";
+        const seg = el2do ? el2do.value : "";
+        
+        if (!prim || !seg) incompleto = true;
+        paqueteQuiniela.grupos[letra] = { "1ro": prim, "2do": seg };
     });
 
-    localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(misPredicciones));
+    // 2. Recopilar datos de la fase de dieciseisavos
+    Object.keys(llavesDieciseisavos).forEach(idLlave => {
+        const elLlave = document.getElementById(`mod-llave-${idLlave}`);
+        const ganador = elLlave ? elLlave.value : "";
+        
+        if (!ganador) incompleto = true;
+        paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+    });
+
+    if (incompleto) {
+        alert("🚨 ¡Epa Peluchón! No puedes dejar casillas vacías. Completa todos los Grupos y las Llaves de Dieciseisavos antes de guardar.");
+        return;
+    }
+
+    // Guardar cambio de forma local y bloquear
+    localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(paqueteQuiniela));
     
-    // --- ENVÍA LOS PRONÓSTICOS A INTERNET (DATABASE.JS) ---
+    // --- ENVÍA LOS PRONÓSTICOS COMPLETOS A INTERNET (DATABASE.JS) ---
     if (typeof subirQuinielaALaNube === 'function') {
-        subirQuinielaALaNube(usuarioLogueado, misPredicciones);
+        subirQuinielaALaNube(usuarioLogueado, paqueteQuiniela);
     }
     
-    alert("¡Tus predicciones se guardaron correctamente!");
+    alert("🏆 ¡Tus predicciones se han guardado con éxito! Quedaron bloqueadas de por vida.");
     cerrarModal();
     actualizarTablaGeneral();
 }
@@ -281,10 +335,11 @@ function calcularAciertosUsuario(nombreUsuario) {
     let conteo = { perfectos: 0, parciales: 0, total: 0 };
 
     if (!datos) return conteo;
-    const predicciones = JSON.parse(datos);
+    const estructura = JSON.parse(datos);
+    const prediccionesGrupos = estructura.grupos || estructura; // Resiliencia de datos antiguos
 
     Object.keys(resultadosReales).forEach(letra => {
-        const pred = predicciones[letra];
+        const pred = prediccionesGrupos[letra];
         const real = resultadosReales[letra];
 
         if (pred) {
@@ -461,7 +516,6 @@ function cerrarSesion() {
     document.getElementById('seccion-login').style.display = 'block';
 }
 
-// --- LÓGICA DEL MINIJUEGO DE FÚTBOL ---
 function toggleJuego() {
     const bloqueJuego = document.getElementById('frame-juego');
     const bloqueCancha = document.querySelector('.bloque-superior-juego');
