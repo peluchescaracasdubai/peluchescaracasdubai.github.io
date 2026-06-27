@@ -133,11 +133,12 @@ function dibujarAlineacionCancha() {
     });
 }
 
+// ... (El inicio de app.js queda igual hasta abrirModalMenuFases)
+
 function abrirModalMenuFases(esEditable, nombreAmigo = "") {
     modalEsEditable = esEditable;
     modalNombreAmigoActivo = nombreAmigo;
     
-    // Si soy yo editando pero YA tengo datos guardados en LocalStorage/Nube, bloqueamos edición
     if (esEditable && localStorage.getItem(`quiniela_${usuarioLogueado}`)) {
         modalEsEditable = false;
         modalNombreAmigoActivo = usuarioLogueado;
@@ -145,17 +146,16 @@ function abrirModalMenuFases(esEditable, nombreAmigo = "") {
 
     document.getElementById('modal-q').style.display = "flex";
     
-    // Inicializar los botones de las pestañas del modal
     const tabGrupos = document.getElementById('fase-tab-grupos');
     const tabOctavos = document.getElementById('fase-tab-octavos');
     
     if (tabGrupos && tabOctavos) {
-        tabGrupos.innerText = "⚽ Fase de Grupos (A-L)";
+        tabGrupos.innerText = "📊 Clasificación Final (Grupos)";
         tabOctavos.innerText = "⚔️ Dieciseisavos de Final";
-        tabOctavos.disabled = false; // Habilitamos Dieciseisavos
+        tabOctavos.disabled = false;
     }
 
-    cambiarFaseVisualizacion('grupos');
+    cambiarFaseVisualizacion('dieciseisavos'); // Entramos directo a la acción
 }
 
 function cambiarFaseVisualizacion(fase) {
@@ -163,7 +163,6 @@ function cambiarFaseVisualizacion(fase) {
     const btnGuardar = document.getElementById('btn-modal-guardar');
     const titulo = document.getElementById('modal-titulo');
     
-    // Cambiar clases activas en los botones de navegación
     document.querySelectorAll('.btn-fase').forEach(b => b.classList.remove('activa'));
     if (fase === 'grupos') document.getElementById('fase-tab-grupos')?.classList.add('activa');
     if (fase === 'dieciseisavos') document.getElementById('fase-tab-octavos')?.classList.add('activa');
@@ -174,78 +173,73 @@ function cambiarFaseVisualizacion(fase) {
     const datosTarget = JSON.parse(localStorage.getItem(`quiniela_${targetUser}`)) || {};
     const yaTieneQuiniela = localStorage.getItem(`quiniela_${targetUser}`) !== null;
 
-    // Configurar el título del Modal según el contexto
     if (targetUser === usuarioLogueado) {
         titulo.innerHTML = modalEsEditable 
             ? "📝 Rellena tus Predicciones Mundialistas" 
-            : `<div style="color:#d32f2f; text-align:center; font-size:14px; background:#ffebee; padding:8px; border-radius:6px; font-weight:bold;">⚠️ Estas son tus predicciones peluchon, estás seguro de ellas, mira que luego no podrás cambiarla y si no te gusta vaya a llorar pal valle!</div>`;
+            : `<div style="color:#d32f2f; text-align:center; font-size:14px; background:#ffebee; padding:8px; border-radius:6px; font-weight:bold;">⚠️ Estas son tus predicciones peluchón, estás seguro de ellas, mira que luego no podrás cambiarla y si no te gusta vaya a llorar pal valle!</div>`;
     } else {
         titulo.innerText = `Pronósticos de ${targetUser}`;
     }
 
-    // El botón guardar solo aparece si la fase es editable y el usuario no tiene registros previos
-    btnGuardar.style.display = (modalEsEditable && !yaTieneQuiniela) ? "block" : "none";
+    // El botón guardar SOLO aparece si estamos en dieciseisavos, es editable, y no hay datos previos
+    btnGuardar.style.display = (fase === 'dieciseisavos' && modalEsEditable && !yaTieneQuiniela) ? "block" : "none";
 
+    // PESTAÑA INFORMATIVA DE GRUPOS
     if (fase === 'grupos') {
-        Object.keys(gruposMundial).forEach(letra => {
-            const equipos = gruposMundial[letra];
+        Object.keys(posicionesGrupos).forEach(letra => {
+            const equipos = posicionesGrupos[letra];
             const tarjeta = document.createElement('div');
             tarjeta.classList.add('tarjeta-grupo');
+            
+            let filasTabla = equipos.map((eq, i) => `
+                <tr style="border-bottom: 1px solid #333; font-size:11px;">
+                    <td style="padding:4px;">${i + 1}</td>
+                    <td style="display:flex; align-items:center; gap:5px; padding:4px;">
+                        <img style="width:16px; border-radius:2px;" src="https://flagcdn.com/${banderasPaises[eq.equipo] || 'un'}.svg">
+                        ${eq.equipo}
+                    </td>
+                    <td style="padding:4px; text-align:center;">${eq.pj}</td>
+                    <td style="padding:4px; text-align:center; color:var(--dorado); font-weight:bold;">${eq.pts}</td>
+                </tr>
+            `).join('');
 
-            if (modalEsEditable && !yaTieneQuiniela) {
-                let opciones = `<option value="">-- Seleccionar --</option>`;
-                equipos.forEach(eq => { opciones += `<option value="${eq}">${eq}</option>`; });
-
-                tarjeta.innerHTML = `
-                    <h4>Grupo ${letra}</h4>
-                    ${equipos.map(eq => `
-                        <div class="fila-bandera">
-                            <img class="bandera-img" src="https://flagcdn.com/${banderasPaises[eq] || 'un'}.svg">
-                            <span>${eq}</span>
-                        </div>
-                    `).join('')}
-                    <label style="font-size:11px; font-weight:bold; margin-top:5px; display:block;">🥇 1º Puesto:</label>
-                    <select class="selector-clasificado" id="mod-grupo-${letra}-1ro">${opciones}</select>
-                    <label style="font-size:11px; font-weight:bold; margin-top:5px; display:block;">🥈 2º Puesto:</label>
-                    <select class="selector-clasificado" id="mod-grupo-${letra}-2do">${opciones}</select>
-                `;
-                grid.appendChild(tarjeta);
-
-                if (datosTarget.grupos?.[letra]) {
-                    document.getElementById(`mod-grupo-${letra}-1ro`).value = datosTarget.grupos[letra]["1ro"] || "";
-                    document.getElementById(`mod-grupo-${letra}-2do`).value = datosTarget[letra]["2do"] || "";
-                }
-            } else {
-                let v1 = datosTarget.grupos?.[letra]? MiniVoto("1ro", datosTarget.grupos[letra]["1ro"]) : "❌ Sin elegir";
-                let v2 = datosTarget.grupos?.[letra]? MiniVoto("2do", datosTarget.grupos[letra]["2do"]) : "❌ Sin elegir";
-
-                tarjeta.innerHTML = `
-                    <h4>Grupo ${letra}</h4>
-                    <div style="margin-top:8px;">${v1}</div>
-                    <div style="margin-top:5px;">${v2}</div>
-                `;
-                grid.appendChild(tarjeta);
-            }
+            tarjeta.innerHTML = `
+                <h4 style="margin-bottom:5px;">Grupo ${letra}</h4>
+                <table style="width:100%; border-collapse: collapse; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #555; font-size:10px; color:#aaa;">
+                            <th>Pos</th><th>Equipo</th><th style="text-align:center;">PJ</th><th style="text-align:center;">Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody>${filasTabla}</tbody>
+                </table>
+            `;
+            grid.appendChild(tarjeta);
         });
     }
 
+    // PESTAÑA DE PREDICCIONES (DIECISEISAVOS)
     if (fase === 'dieciseisavos') {
         Object.keys(llavesDieciseisavos).forEach(idLlave => {
-            const opcionesLlave = llavesDieciseisavos[idLlave];
+            const [eq1, eq2] = llavesDieciseisavos[idLlave];
             const tarjeta = document.createElement('div');
             tarjeta.classList.add('tarjeta-grupo');
             tarjeta.style.borderColor = "var(--dorado)";
 
             if (modalEsEditable && !yaTieneQuiniela) {
-                let opcionesHTML = `<option value="">-- Seleccionar Ganador --</option>`;
-                Object.keys(banderasPaises).sort().forEach(pais => {
-                    opcionesHTML += `<option value="${pais}">${pais}</option>`;
-                });
+                // Solo se muestran los 2 equipos que se enfrentan
+                let opcionesHTML = `<option value="">-- Elige un ganador --</option>`;
+                opcionesHTML += `<option value="${eq1}">${eq1}</option>`;
+                opcionesHTML += `<option value="${eq2}">${eq2}</option>`;
 
                 tarjeta.innerHTML = `
                     <h4>Llave ${idLlave}</h4>
-                    <p style="font-size:10px; color:#777; margin-bottom:5px;">${opcionesLlave[0]} vs ${opcionesLlave[1]}</p>
-                    <label style="font-size:11px; font-weight:bold; display:block;">🏆 Pasa a Octavos:</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; background:rgba(0,0,0,0.2); padding:5px; border-radius:4px;">
+                        <span style="font-weight:bold; color:white;">${eq1}</span> 
+                        <span style="color:var(--dorado);">VS</span> 
+                        <span style="font-weight:bold; color:white;">${eq2}</span>
+                    </div>
+                    <label style="font-size:11px; font-weight:bold; display:block; color:var(--verde-grama);">🏆 ¿Quién avanza a Octavos?:</label>
                     <select class="selector-clasificado" id="mod-llave-${idLlave}">${opcionesHTML}</select>
                 `;
                 grid.appendChild(tarjeta);
@@ -259,19 +253,13 @@ function cambiarFaseVisualizacion(fase) {
 
                 tarjeta.innerHTML = `
                     <h4>Llave ${idLlave}</h4>
-                    <p style="font-size:10px; color:#777; margin-bottom:5px;">${opcionesLlave[0]} vs ${opcionesLlave[1]}</p>
-                    <div class="voto-vista">🚀 Avanza: ${flagG} <b>${ganador}</b></div>
+                    <p style="font-size:10px; color:#777; margin-bottom:5px; text-align:center;">${eq1} vs ${eq2}</p>
+                    <div class="voto-vista" style="text-align:center; background:#1a1a1a; padding:8px; border-radius:5px;">🚀 Avanza:<br> ${flagG} <b style="color:var(--dorado); font-size:14px;">${ganador}</b></div>
                 `;
                 grid.appendChild(tarjeta);
             }
         });
     }
-}
-
-function MiniVoto(puesto, pais) {
-    if (!pais) return "❌ Sin elegir";
-    let flag = banderasPaises[pais] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[pais]}.svg">` : "";
-    return `${puesto === '1ro' ? '🥇 1ro:' : '🥈 2do:'} ${flag} <b>${pais}</b>`;
 }
 
 function guardarMiQuiniela() {
@@ -280,43 +268,26 @@ function guardarMiQuiniela() {
         return;
     }
 
-    let paqueteQuiniela = {
-        grupos: {},
-        dieciseisavos: {}
-    };
-
+    let paqueteQuiniela = { dieciseisavos: {} };
     let incompleto = false;
 
-    // 1. Recopilar datos de la fase de grupos
-    Object.keys(gruposMundial).forEach(letra => {
-        const el1ro = document.getElementById(`mod-grupo-${letra}-1ro`);
-        const el2do = document.getElementById(`mod-grupo-${letra}-2do`);
-        
-        const prim = el1ro ? el1ro.value : "";
-        const seg = el2do ? el2do.value : "";
-        
-        if (!prim || !seg) incompleto = true;
-        paqueteQuiniela.grupos[letra] = { "1ro": prim, "2do": seg };
-    });
-
-    // 2. Recopilar datos de la fase de dieciseisavos
+    // Solo verificamos la pestaña activa (Dieciseisavos)
     Object.keys(llavesDieciseisavos).forEach(idLlave => {
         const elLlave = document.getElementById(`mod-llave-${idLlave}`);
-        const ganador = elLlave ? elLlave.value : "";
-        
-        if (!ganador) incompleto = true;
-        paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+        if(elLlave) {
+            const ganador = elLlave.value;
+            if (!ganador) incompleto = true;
+            paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+        }
     });
 
     if (incompleto) {
-        alert("🚨 ¡Epa Peluchón! No puedes dejar casillas vacías. Completa todos los Grupos y las Llaves de Dieciseisavos antes de guardar.");
+        alert("🚨 ¡Epa Peluchón! No puedes dejar casillas vacías. Completa todas las Llaves de Dieciseisavos antes de guardar.");
         return;
     }
 
-    // Guardar cambio de forma local y bloquear
     localStorage.setItem(`quiniela_${usuarioLogueado}`, JSON.stringify(paqueteQuiniela));
     
-    // --- ENVÍA LOS PRONÓSTICOS COMPLETOS A INTERNET (DATABASE.JS) ---
     if (typeof subirQuinielaALaNube === 'function') {
         subirQuinielaALaNube(usuarioLogueado, paqueteQuiniela);
     }
@@ -325,6 +296,8 @@ function guardarMiQuiniela() {
     cerrarModal();
     actualizarTablaGeneral();
 }
+
+// ... (El resto del archivo app.js queda intacto hacia abajo)
 
 function cerrarModal() { 
     document.getElementById('modal-q').style.display = "none"; 
