@@ -15,7 +15,7 @@ const banderasPaises = {
     "México": "mx", "Dinamarca": "dk", "Túnez": "tn", "Nueva Zelanda": "nz",
     "Chile": "cl", "Austria": "at", "Egipto": "eg", "China": "cn",
     "Senegal": "sn", "Serbia": "rs", "Camerún": "cm", "Costa Rica": "cr",
-    "Suecia": "se", "Polonia": "pl", "Ghana": "gh"
+    "Suecia": "se", "Polonia": "pl", "Ghana": "gh", "Chequia": "cz"
 };
 
 const gruposMundial = {
@@ -33,24 +33,103 @@ const gruposMundial = {
     "L": ["Suecia", "Polonia", "Ghana", "Argentina"]
 };
 
-// --- NUEVA ESTRUCTURA: MAPEO DE LOS DIECISEISAVOS DE FINAL (16 llaves, 32 equipos) ---
+// --- TABLA INFORMATIVA FINAL DE GRUPOS ---
+// Estos datos son de ejemplo para que la tabla se vea bien en todos los grupos. 
+// Cámbialos luego según los resultados reales del torneo de tu liga.
+const posicionesGrupos = {
+    "A": [
+        { equipo: "México", pj: 3, g: 3, e: 0, p: 0, gf: 6, gc: 0, pts: 9 },
+        { equipo: "Sudáfrica", pj: 3, g: 1, e: 1, p: 1, gf: 2, gc: 3, pts: 4 },
+        { equipo: "Corea del Sur", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 3, pts: 3 },
+        { equipo: "Chequia", pj: 3, g: 0, e: 1, p: 2, gf: 2, gc: 6, pts: 1 }
+    ],
+    "B": [
+        { equipo: "España", pj: 3, g: 2, e: 1, p: 0, gf: 5, gc: 1, pts: 7 },
+        { equipo: "Alemania", pj: 3, g: 2, e: 0, p: 1, gf: 4, gc: 2, pts: 6 },
+        { equipo: "Japón", pj: 3, g: 1, e: 1, p: 1, gf: 3, gc: 3, pts: 4 },
+        { equipo: "Ecuador", pj: 3, g: 0, e: 0, p: 3, gf: 1, gc: 7, pts: 0 }
+    ],
+    "C": [
+        { equipo: "Brasil", pj: 3, g: 3, e: 0, p: 0, gf: 7, gc: 1, pts: 9 },
+        { equipo: "Portugal", pj: 3, g: 2, e: 0, p: 1, gf: 4, gc: 2, pts: 6 },
+        { equipo: "Corea del Sur", pj: 3, g: 0, e: 1, p: 2, gf: 2, gc: 5, pts: 1 },
+        { equipo: "Jamaica", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 6, pts: 1 }
+    ],
+    "D": [
+        { equipo: "Italia", pj: 3, g: 2, e: 1, p: 0, gf: 4, gc: 1, pts: 7 },
+        { equipo: "Bélgica", pj: 3, g: 1, e: 2, p: 0, gf: 3, gc: 2, pts: 5 },
+        { equipo: "Argelia", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Honduras", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 3, pts: 1 }
+    ],
+    "E": [
+        { equipo: "Uruguay", pj: 3, g: 2, e: 1, p: 0, gf: 5, gc: 2, pts: 7 },
+        { equipo: "Inglaterra", pj: 3, g: 2, e: 0, p: 1, gf: 4, gc: 3, pts: 6 },
+        { equipo: "Australia", pj: 3, g: 1, e: 1, p: 1, gf: 3, gc: 3, pts: 4 },
+        { equipo: "Irak", pj: 3, g: 0, e: 0, p: 3, gf: 0, gc: 4, pts: 0 }
+    ],
+    "F": [
+        { equipo: "Países Bajos", pj: 3, g: 3, e: 0, p: 0, gf: 6, gc: 1, pts: 9 },
+        { equipo: "Croacia", pj: 3, g: 1, e: 1, p: 1, gf: 3, gc: 3, pts: 4 },
+        { equipo: "Nigeria", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Panamá", pj: 3, g: 0, e: 1, p: 2, gf: 2, gc: 5, pts: 1 }
+    ],
+    "G": [
+        { equipo: "Colombia", pj: 3, g: 2, e: 1, p: 0, gf: 4, gc: 1, pts: 7 },
+        { equipo: "Suiza", pj: 3, g: 1, e: 2, p: 0, gf: 2, gc: 1, pts: 5 },
+        { equipo: "Irán", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Sudáfrica", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 3, pts: 1 }
+    ],
+    "H": [
+        { equipo: "Estados Unidos", pj: 3, g: 2, e: 1, p: 0, gf: 5, gc: 2, pts: 7 },
+        { equipo: "Gales", pj: 3, g: 1, e: 1, p: 1, gf: 3, gc: 3, pts: 4 },
+        { equipo: "Arabia Saudita", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Perú", pj: 3, g: 0, e: 2, p: 1, gf: 2, gc: 3, pts: 2 }
+    ],
+    "I": [
+        { equipo: "México", pj: 3, g: 2, e: 1, p: 0, gf: 4, gc: 1, pts: 7 },
+        { equipo: "Dinamarca", pj: 3, g: 1, e: 2, p: 0, gf: 3, gc: 2, pts: 5 },
+        { equipo: "Túnez", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Nueva Zelanda", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 3, pts: 1 }
+    ],
+    "J": [
+        { equipo: "Chile", pj: 3, g: 3, e: 0, p: 0, gf: 6, gc: 2, pts: 9 },
+        { equipo: "Austria", pj: 3, g: 2, e: 0, p: 1, gf: 4, gc: 3, pts: 6 },
+        { equipo: "Egipto", pj: 3, g: 0, e: 1, p: 2, gf: 2, gc: 5, pts: 1 },
+        { equipo: "China", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 3, pts: 1 }
+    ],
+    "K": [
+        { equipo: "Senegal", pj: 3, g: 2, e: 1, p: 0, gf: 5, gc: 2, pts: 7 },
+        { equipo: "Serbia", pj: 3, g: 2, e: 0, p: 1, gf: 4, gc: 2, pts: 6 },
+        { equipo: "Camerún", pj: 3, g: 1, e: 0, p: 2, gf: 3, gc: 5, pts: 3 },
+        { equipo: "Costa Rica", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 4, pts: 1 }
+    ],
+    "L": [
+        { equipo: "Suecia", pj: 3, g: 2, e: 1, p: 0, gf: 4, gc: 1, pts: 7 },
+        { equipo: "Polonia", pj: 3, g: 1, e: 2, p: 0, gf: 2, gc: 1, pts: 5 },
+        { equipo: "Ghana", pj: 3, g: 1, e: 0, p: 2, gf: 2, gc: 4, pts: 3 },
+        { equipo: "Argentina", pj: 3, g: 0, e: 1, p: 2, gf: 1, gc: 3, pts: 1 }
+    ]
+};
+
+// --- CRUCES REALES DE DIECISEISAVOS DE FINAL ---
+// Estos son los equipos reales que se van a enfrentar. Cámbialos a medida que se definan en tu torneo.
 const llavesDieciseisavos = {
-    "L1": ["1ro Grupo A", "2do Grupo B"],
-    "L2": ["1ro Grupo C", "2do Grupo D"],
-    "L3": ["1ro Grupo E", "2do Grupo F"],
-    "L4": ["1ro Grupo G", "2do Grupo H"],
-    "L5": ["1ro Grupo I", "2do Grupo J"],
-    "L6": ["1ro Grupo K", "2do Grupo L"],
-    "L7": ["1ro Grupo B", "2do Grupo A"],
-    "L8": ["1ro Grupo D", "2do Grupo C"],
-    "L9": ["1ro Grupo F", "2do Grupo E"],
-    "L10": ["1ro Grupo H", "2do Grupo G"],
-    "L11": ["1ro Grupo J", "2do Grupo I"],
-    "L12": ["1ro Grupo L", "2do Grupo K"],
-    "L13": ["Mejor 3ro 1", "Mejor 3ro 2"],
-    "L14": ["Mejor 3ro 3", "Mejor 3ro 4"],
-    "L15": ["Mejor 3ro 5", "Mejor 3ro 6"],
-    "L16": ["Mejor 3ro 7", "Mejor 3ro 8"]
+    "L1": ["Sudáfrica", "Canadá"],
+    "L2": ["México", "Alemania"],
+    "L3": ["Brasil", "Portugal"],
+    "L4": ["Argentina", "Italia"],
+    "L5": ["España", "Francia"],
+    "L6": ["Colombia", "Suiza"],
+    "L7": ["Uruguay", "Inglaterra"],
+    "L8": ["Países Bajos", "Croacia"],
+    "L9": ["Estados Unidos", "Gales"],
+    "L10": ["Chile", "Austria"],
+    "L11": ["Senegal", "Serbia"],
+    "L12": ["Suecia", "Polonia"],
+    "L13": ["Japón", "Ecuador"],
+    "L14": ["Corea del Sur", "Jamaica"],
+    "L15": ["Marruecos", "Dinamarca"],
+    "L16": ["Argelia", "Honduras"]
 };
 
 const resultadosReales = {
@@ -86,7 +165,7 @@ const poolCuriosidades = {
         "Utilizó un balón de fabricación local en la primera final de Uruguay 1930.",
         "Es el combinado nacional que más tandas de penales ha ganado en mundiales.",
         "Diego Armando Maradona ostenta el récord de más faltas recibidas en un torneo (53).",
-        "Los bastones clásicos celestes y whites aparecieron por primera vez en 1908.",
+        "Los bastones clásicos celestes y blancos aparecieron por primera vez en 1908.",
         "Guillermo Stábile se consagró como el primer máximo goleador del torneo.",
         "Lionel Messi es el jugador con más presencias en fases finales mundiales.",
         "Alcanzaron su primer trofeo actuando como el país anfitrión en 1978.",
@@ -140,7 +219,7 @@ const poolCuriosidades = {
         "Fue la primera escuadra europea en ganar el campeonato fuera de su continente.",
         "Consiguieron un invicto histórico internacional de 35 compromisos seguidos.",
         "Gavi se convirtió en su goleador más joven en la historia de la Copa de la FIFA.",
-        "La mítica e unforgettable mascota oficial de su edición en 1982 fue Naranjito."
+        "La mítica e inolvidable mascota oficial de su edición en 1982 fue Naranjito."
     ],
     "Alemania": [
         "Es uno de los equipos más consistentes con 4 estrellas de campeonato en su haber.",
