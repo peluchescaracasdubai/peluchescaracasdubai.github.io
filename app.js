@@ -560,3 +560,60 @@ function toggleJuego() {
         btnJuego.style.background = '#005A9C'; 
     }
 }
+
+// --- MANEJADOR DE AUDIO Y VOLUMEN MUNDIALISTA ---
+let musicaMuted = false;
+let volumenPrevio = 0.4;
+
+function activarMusicaAlEntrar() {
+    const audio = document.getElementById('musica-fondo');
+    const slider = document.getElementById('slider-volumen');
+    if (audio) {
+        audio.volume = slider ? slider.value : 0.4;
+        audio.play().catch(err => console.log("Esperando interacción para reproducir audio."));
+    }
+}
+
+function controlarVolumenMusica(valor) {
+    const audio = document.getElementById('musica-fondo');
+    const btnMute = document.getElementById('btn-audio-mute');
+    if (!audio) return;
+    
+    audio.volume = valor;
+    if (valor > 0) {
+        musicaMuted = false;
+        if (btnMute) btnMute.innerText = valor > 0.5 ? "🔊" : "🔉";
+    } else {
+        if (btnMute) btnMute.innerText = "🔇";
+    }
+}
+
+function controlarMuteMusica() {
+    const audio = document.getElementById('musica-fondo');
+    const btnMute = document.getElementById('btn-audio-mute');
+    const slider = document.getElementById('slider-volumen');
+    if (!audio || !btnMute) return;
+
+    if (!musicaMuted) {
+        volumenPrevio = audio.volume > 0 ? audio.volume : 0.4;
+        audio.volume = 0;
+        if (slider) slider.value = 0;
+        btnMute.innerText = "🔇";
+        musicaMuted = true;
+    } else {
+        audio.volume = volumenPrevio;
+        if (slider) slider.value = volumenPrevio;
+        btnMute.innerText = volumenPrevio > 0.5 ? "🔊" : "🔉";
+        musicaMuted = false;
+    }
+}
+
+// Enganchamos la música al login para bypass del navegador
+const loginBtn = document.querySelector("#seccion-login button");
+if(loginBtn) {
+    const clickOriginal = loginBtn.getAttribute("onclick");
+    loginBtn.onclick = function() {
+        activarMusicaAlEntrar();
+        intentarLogin();
+    };
+}
