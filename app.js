@@ -18,6 +18,14 @@ window.onload = function() {
 };
 
 function intentarLogin() {
+    // Activar reproducción de música de fondo al hacer clic (Bypass navegador)
+    const audio = document.getElementById('musica-fondo');
+    const slider = document.getElementById('slider-volumen');
+    if (audio) {
+        audio.volume = slider ? slider.value : 0.4;
+        audio.play().catch(err => console.log("Esperando interacción para reproducir audio."));
+    }
+
     const usuario = document.getElementById('login-usuario').value;
     const clave = document.getElementById('login-clave').value.trim();
     const errorMsg = document.getElementById('error-login');
@@ -133,8 +141,6 @@ function dibujarAlineacionCancha() {
     });
 }
 
-// ... (El inicio de app.js queda igual hasta abrirModalMenuFases)
-
 function abrirModalMenuFases(esEditable, nombreAmigo = "") {
     modalEsEditable = esEditable;
     modalNombreAmigoActivo = nombreAmigo;
@@ -154,6 +160,7 @@ function abrirModalMenuFases(esEditable, nombreAmigo = "") {
         tabOctavos.innerText = "⚔️ Dieciseisavos de Final";
         tabOctavos.disabled = false;
     }
+} // <--- ¡AQUÍ FALTABA ESTA LLAVE QUE CORREGÍA EL ERROR DE LOGIN!
 
 function cambiarFaseVisualizacion(fase) {
     const grid = document.getElementById('modal-grid-grupos');
@@ -346,8 +353,6 @@ function guardarMiQuiniela() {
     cerrarModal();
     actualizarTablaGeneral();
 }
-
-// ... (El resto del archivo app.js queda intacto hacia abajo)
 
 function cerrarModal() { 
     document.getElementById('modal-q').style.display = "none"; 
@@ -565,15 +570,6 @@ function toggleJuego() {
 let musicaMuted = false;
 let volumenPrevio = 0.4;
 
-function activarMusicaAlEntrar() {
-    const audio = document.getElementById('musica-fondo');
-    const slider = document.getElementById('slider-volumen');
-    if (audio) {
-        audio.volume = slider ? slider.value : 0.4;
-        audio.play().catch(err => console.log("Esperando interacción para reproducir audio."));
-    }
-}
-
 function controlarVolumenMusica(valor) {
     const audio = document.getElementById('musica-fondo');
     const btnMute = document.getElementById('btn-audio-mute');
@@ -606,14 +602,4 @@ function controlarMuteMusica() {
         btnMute.innerText = volumenPrevio > 0.5 ? "🔊" : "🔉";
         musicaMuted = false;
     }
-}
-
-// Enganchamos la música al login para bypass del navegador
-const loginBtn = document.querySelector("#seccion-login button");
-if(loginBtn) {
-    const clickOriginal = loginBtn.getAttribute("onclick");
-    loginBtn.onclick = function() {
-        activarMusicaAlEntrar();
-        intentarLogin();
-    };
 }
