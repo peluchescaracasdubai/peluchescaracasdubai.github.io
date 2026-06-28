@@ -10,6 +10,17 @@
 
     <canvas id="spark-canvas"></canvas>
 
+    <!-- MOTOR DE AUDIO PARA LA MÚSICA DE FONDO -->
+    <audio id="musica-fondo" src="daidai.mp3" loop></audio>
+
+    <!-- CONTROL FLOTANTE DE AUDIO (CORNETA + DESLIZADOR DE VOLUMEN) -->
+    <div class="contenedor-audio-flotante">
+        <button id="btn-audio-mute" onclick="controlarMuteMusica()" class="btn-corneta">🔊</button>
+        <div class="deslizador-volumen-control">
+            <input type="range" id="slider-volumen" min="0" max="1" step="0.05" value="0.4" oninput="controlarVolumenMusica(this.value)">
+        </div>
+    </div>
+
     <div class="pantalla-login" id="seccion-login">
         <h1>⚽ Quiniela Peluches 🏆</h1>
         <p style="color: #666; margin-bottom: 20px;">Inicia sesión en tu cuenta</p>
@@ -55,7 +66,8 @@
                 </div>
             </div>
 
-            <button onclick="abrirModalMenuFases(true)" style="width: 100%; margin-bottom: 15px;">📝 Editar Mi Quiniela</button>
+            <!-- BOTÓN CORREGIDO A CREAR MI QUINIELA -->
+            <button onclick="abrirModalMenuFases(true)" style="width: 100%; margin-bottom: 15px;">📝 Crear Mi Quiniela</button>
             <button id="btn-toggle-juego" onclick="toggleJuego()" style="width: 100%; margin-bottom: 15px; background: #005A9C;">🎮 Jugar Minijuego</button>
             <button onclick="cerrarSesion()" class="btn-salir">🚪 Cerrar Aplicación</button>
         </aside>
