@@ -160,7 +160,9 @@ function abrirModalMenuFases(esEditable, nombreAmigo = "") {
         tabOctavos.innerText = "⚔️ Dieciseisavos de Final";
         tabOctavos.disabled = false;
     }
-} // <--- ¡AQUÍ FALTABA ESTA LLAVE QUE CORREGÍA EL ERROR DE LOGIN!
+    
+    cambiarFaseVisualizacion('dieciseisavos');
+}
 
 function cambiarFaseVisualizacion(fase) {
     const grid = document.getElementById('modal-grid-grupos');
@@ -185,10 +187,8 @@ function cambiarFaseVisualizacion(fase) {
         titulo.innerText = `Pronósticos de ${targetUser}`;
     }
 
-    // El botón guardar SOLO aparece si estamos en dieciseisavos, es el usuario activo editando por primera vez
     btnGuardar.style.display = (fase === 'dieciseisavos' && modalEsEditable && !yaTieneQuiniela) ? "block" : "none";
 
-    // PESTAÑA INFORMATIVA DE GRUPOS (CON TODAS LAS COLUMNAS REQUERIDAS)
     if (fase === 'grupos') {
         Object.keys(posicionesGrupos).forEach(letra => {
             const equipos = posicionesGrupos[letra];
@@ -243,7 +243,6 @@ function cambiarFaseVisualizacion(fase) {
         });
     }
 
-    // PESTAÑA DE CREACIÓN DE QUINIELA (DIECISEISAVOS VERTICALES CON BANDERA)
     if (fase === 'dieciseisavos') {
         Object.keys(llavesDieciseisavos).forEach(idLlave => {
             const [eq1, eq2] = llavesDieciseisavos[idLlave];
@@ -251,39 +250,34 @@ function cambiarFaseVisualizacion(fase) {
             tarjeta.classList.add('tarjeta-grupo');
             tarjeta.style.borderColor = "var(--dorado)";
 
-            // Detectar si la llave está incompleta en la realidad
-            const llaveIncompleta = (eq1 === "Por definir" || eq2 === "Por definir");
-
             const b1 = banderasPaises[eq1] ? `https://flagcdn.com/${banderasPaises[eq1]}.svg` : "https://cdn-icons-png.flaticon.com/512/2572/2572801.png";
             const b2 = banderasPaises[eq2] ? `https://flagcdn.com/${banderasPaises[eq2]}.svg` : "https://cdn-icons-png.flaticon.com/512/2572/2572801.png";
 
             if (modalEsEditable && !yaTieneQuiniela) {
                 let opcionesHTML = `<option value="">-- Elige quién pasa --</option>`;
-                if (!llaveIncompleta) {
-                    opcionesHTML += `<option value="${eq1}">${eq1}</option>`;
-                    opcionesHTML += `<option value="${eq2}">${eq2}</option>`;
-                }
+                opcionesHTML += `<option value="${eq1}">${eq1}</option>`;
+                opcionesHTML += `<option value="${eq2}">${eq2}</option>`;
 
                 tarjeta.innerHTML = `
                     <h4 style="color:var(--dorado); font-size:12px; margin-bottom:8px;">Llave ${idLlave}</h4>
                     <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <img style="width:20px; height:14px; border-radius:2px; object-fit:cover;" src="${b1}">
-                            <span style="font-size:12px; font-weight:bold; color:${eq1 === 'Por definir' ? '#666' : 'white'}">${eq1}</span>
+                            <span style="font-size:12px; font-weight:bold; color:white;">${eq1}</span>
                         </div>
                         <div style="border-top:1px dashed #444; margin:2px 0;"></div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <img style="width:20px; height:14px; border-radius:2px; object-fit:cover;" src="${b2}">
-                            <span style="font-size:12px; font-weight:bold; color:${eq2 === 'Por definir' ? '#666' : 'white'}">${eq2}</span>
+                            <span style="font-size:12px; font-weight:bold; color:white;">${eq2}</span>
                         </div>
                     </div>
-                    <select class="selector-clasificado" id="mod-llave-${idLlave}" ${llaveIncompleta ? 'disabled' : ''} style="width:100%;">
-                        ${llaveIncompleta ? '<option value="">⚠️ Esperando Rivales</option>' : opcionesHTML}
+                    <select class="selector-clasificado" id="mod-llave-${idLlave}" style="width:100%;">
+                        ${opcionesHTML}
                     </select>
                 `;
                 grid.appendChild(tarjeta);
 
-                if (datosTarget.dieciseisavos?.[idLlave] && !llaveIncompleta) {
+                if (datosTarget.dieciseisavos?.[idLlave]) {
                     document.getElementById(`mod-llave-${idLlave}`).value = datosTarget.dieciseisavos[idLlave];
                 }
             } else {
@@ -319,22 +313,14 @@ function guardarMiQuiniela() {
     let paqueteQuiniela = { dieciseisavos: {} };
     let incompleto = false;
 
-    // Solo validamos las llaves que YA están definidas en la vida real.
-    // Las que dicen "Por definir" se guardan vacías de forma automática.
     for (const idLlave in llavesDieciseisavos) {
-        const [eq1, eq2] = llavesDieciseisavos[idLlave];
         const elLlave = document.getElementById(`mod-llave-${idLlave}`);
-        
-        if (eq1 !== "Por definir" && eq2 !== "Por definir") {
-            if (elLlave) {
-                const ganador = elLlave.value;
-                if (!ganador) {
-                    incompleto = true;
-                }
-                paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+        if (elLlave) {
+            const ganador = elLlave.value;
+            if (!ganador) {
+                incompleto = true;
             }
-        } else {
-            paqueteQuiniela.dieciseisavos[idLlave] = ""; // Se guarda vacío en Supabase de forma segura
+            paqueteQuiniela.dieciseisavos[idLlave] = ganador;
         }
     }
 
@@ -364,7 +350,7 @@ function calcularAciertosUsuario(nombreUsuario) {
 
     if (!datos) return conteo;
     const estructura = JSON.parse(datos);
-    const prediccionesGrupos = estructura.grupos || estructura; // Resiliencia de datos antiguos
+    const prediccionesGrupos = estructura.grupos || estructura;
 
     Object.keys(resultadosReales).forEach(letra => {
         const pred = prediccionesGrupos[letra];
@@ -603,10 +589,11 @@ function controlarMuteMusica() {
         musicaMuted = false;
     }
 }
+
 // Fuerza la reproducción en el primer clic si el navegador la dejó en pausa
 window.addEventListener('click', function() {
     const audio = document.getElementById('musica-fondo');
     if (audio && audio.paused && usuarioLogueado !== "") {
         audio.play().catch(err => console.log("Esperando interacción..."));
     }
-}, { once: true }); // Solo se ejecuta una vez para no molestar
+}, { once: true });
