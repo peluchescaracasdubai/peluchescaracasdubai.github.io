@@ -16,11 +16,10 @@ const banderasPaises = {
     "Chile": "cl", "Austria": "at", "Egipto": "eg", "China": "cn",
     "Senegal": "sn", "Serbia": "rs", "Camerún": "cm", "Costa Rica": "cr",
     "Suecia": "se", "Polonia": "pl", "Ghana": "gh", "Chequia": "cz",
-    // Nuevas banderas añadidas de tus capturas reales de 2026:
     "Bosnia y Herzegovina": "ba", "Catar": "qa", "Escocia": "gb-sct", "Haití": "ht",
     "Paraguay": "py", "Turquía": "tr", "Costa de Marfil": "ci", "Curazao": "cw",
     "Cabo Verde": "cv", "Noruega": "no", "Jordania": "jo", "RD Congo": "cd",
-    "Uzbekistán": "uz"
+    "Uzbekistán": "uz", "Cabo Verde": "cv"
 };
 
 const gruposMundial = {
@@ -114,8 +113,7 @@ const posicionesGrupos = {
     ]
 };
 
-// --- LLAVES DE DIECISEISAVOS EXTRAÍDAS DE TUS CAPTURAS ---
-// Si un contrincante es "Por definir", la app sabrá que está bloqueado el enfrentamiento.
+// --- LAS 16 LLAVES REALES TOTALMENTE DEFINIDAS DESDE TU PANEL ---
 const llavesDieciseisavos = {
     "L1": ["Sudáfrica", "Canadá"],
     "L2": ["Brasil", "Japón"],
@@ -123,34 +121,33 @@ const llavesDieciseisavos = {
     "L4": ["Países Bajos", "Marruecos"],
     "L5": ["Costa de Marfil", "Noruega"],
     "L6": ["Francia", "Suecia"],
-    "L7": ["México", "Por definir"],
-    "L8": ["Por definir", "Por definir"],
-    "L9": ["Bélgica", "Por definir"],
+    "L7": ["México", "Ecuador"],
+    "L8": ["Inglaterra", "RD Congo"],
+    "L9": ["Bélgica", "Senegal"],
     "L10": ["Estados Unidos", "Bosnia y Herzegovina"],
-    "L11": ["España", "Por definir"],
-    "L12": ["Por definir", "Por definir"],
-    "L13": ["Suiza", "Por definir"],
+    "L11": ["España", "Austria"],
+    "L12": ["Portugal", "Croacia"],
+    "L13": ["Suiza", "Argelia"],
     "L14": ["Australia", "Egipto"],
     "L15": ["Argentina", "Cabo Verde"],
-    "L16": ["Por definir", "Por definir"]
+    "L16": ["Colombia", "Ghana"]
 };
 
 const resultadosReales = {
     "A": { "1ro": "México", "2do": "Sudáfrica" }, 
     "B": { "1ro": "Suiza", "2do": "Canadá" }
-    // Se calcula dinámicamente con las posiciones si es necesario.
 };
 
 const llaveEliminatoriaReal = {
     izq: {
-        dieciseisavos: ["Sudáfrica", "Canadá", "Alemania", "Paraguay", "Costa de Marfil", "Noruega", "México", "Por definir"],
+        dieciseisavos: ["Sudáfrica", "Canadá", "Alemania", "Paraguay", "Costa de Marfil", "Noruega", "México", "Ecuador"],
         octavos: ["", "", "", ""], 
         cuartos: ["", ""],
         semi: [""],
         finalista: ""
     },
     der: {
-        dieciseisavos: ["Brasil", "Japón", "Países Bajos", "Marruecos", "Francia", "Suecia", "Por definir", "Por definir"],
+        dieciseisavos: ["Brasil", "Japón", "Países Bajos", "Marruecos", "Francia", "Suecia", "Inglaterra", "RD Congo"],
         octavos: ["", "", "", ""],
         cuartos: ["", ""],
         semi: [""],
@@ -172,8 +169,8 @@ const poolCuriosidades = {
 };
 
 const baseCalendarios = {
-    "España": ["Próximo encuentro: Dieciseisavos de Final ⏰ Por confirmar"],
-    "México": ["Próximo encuentro: Dieciseisavos de Final ⏰ Por confirmar"]
+    "España": ["Próximo encuentro: Dieciseisavos de Final 2/7 21:00 🏟️"],
+    "México": ["Próximo encuentro: Dieciseisavos de Final 1/7 3:00 🏟️"]
 };
 
 const poolMascotas = ["m1.png", "m2.png", "m3.png"];
