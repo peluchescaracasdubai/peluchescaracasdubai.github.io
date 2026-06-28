@@ -155,9 +155,6 @@ function abrirModalMenuFases(esEditable, nombreAmigo = "") {
         tabOctavos.disabled = false;
     }
 
-    cambiarFaseVisualizacion('dieciseisavos'); // Entramos directo a la acción
-}
-
 function cambiarFaseVisualizacion(fase) {
     const grid = document.getElementById('modal-grid-grupos');
     const btnGuardar = document.getElementById('btn-modal-guardar');
@@ -175,40 +172,61 @@ function cambiarFaseVisualizacion(fase) {
 
     if (targetUser === usuarioLogueado) {
         titulo.innerHTML = modalEsEditable 
-            ? "📝 Rellena tus Predicciones Mundialistas" 
+            ? "📝 Crea tus Predicciones de Dieciseisavos" 
             : `<div style="color:#d32f2f; text-align:center; font-size:14px; background:#ffebee; padding:8px; border-radius:6px; font-weight:bold;">⚠️ Estas son tus predicciones peluchón, estás seguro de ellas, mira que luego no podrás cambiarla y si no te gusta vaya a llorar pal valle!</div>`;
     } else {
         titulo.innerText = `Pronósticos de ${targetUser}`;
     }
 
-    // El botón guardar SOLO aparece si estamos en dieciseisavos, es editable, y no hay datos previos
+    // El botón guardar SOLO aparece si estamos en dieciseisavos, es el usuario activo editando por primera vez
     btnGuardar.style.display = (fase === 'dieciseisavos' && modalEsEditable && !yaTieneQuiniela) ? "block" : "none";
 
-    // PESTAÑA INFORMATIVA DE GRUPOS
+    // PESTAÑA INFORMATIVA DE GRUPOS (CON TODAS LAS COLUMNAS REQUERIDAS)
     if (fase === 'grupos') {
         Object.keys(posicionesGrupos).forEach(letra => {
             const equipos = posicionesGrupos[letra];
             const tarjeta = document.createElement('div');
             tarjeta.classList.add('tarjeta-grupo');
             
-            let filasTabla = equipos.map((eq, i) => `
-                <tr style="border-bottom: 1px solid #333; font-size:11px;">
-                    <td style="padding:4px;">${i + 1}</td>
-                    <td style="display:flex; align-items:center; gap:5px; padding:4px;">
-                        <img style="width:16px; border-radius:2px;" src="https://flagcdn.com/${banderasPaises[eq.equipo] || 'un'}.svg">
-                        ${eq.equipo}
-                    </td>
-                    <td style="padding:4px; text-align:center;">${eq.pj}</td>
-                    <td style="padding:4px; text-align:center; color:var(--dorado); font-weight:bold;">${eq.pts}</td>
-                </tr>
-            `).join('');
+            let filasTabla = equipos.map((eq, i) => {
+                const banderaSrc = banderasPaises[eq.equipo] 
+                    ? `https://flagcdn.com/${banderasPaises[eq.equipo]}.svg` 
+                    : "https://cdn-icons-png.flaticon.com/512/53/53283.png";
+                    
+                return `
+                    <tr style="border-bottom: 1px solid #222; font-size:11px;">
+                        <td style="padding:5px 2px; text-align:center;">${i + 1}</td>
+                        <td style="display:flex; align-items:center; gap:5px; padding:5px 2px; white-space:nowrap;">
+                            <img style="width:16px; height:11px; border-radius:1px; object-fit:cover;" src="${banderaSrc}">
+                            <span style="overflow:hidden; text-overflow:ellipsis; max-width:90px;">${eq.equipo}</span>
+                        </td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.pj}</td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.g}</td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.e}</td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.p}</td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.gf}</td>
+                        <td style="padding:5px 2px; text-align:center;">${eq.gc}</td>
+                        <td style="padding:5px 2px; text-align:center; color:${eq.dg >= 0 ? '#4caf50' : '#f44336'}">${eq.dg >= 0 ? '+' + eq.dg : eq.dg}</td>
+                        <td style="padding:5px 2px; text-align:center; color:var(--verde-grama); font-weight:bold;">${eq.pts}</td>
+                    </tr>
+                `;
+            }).join('');
 
             tarjeta.innerHTML = `
-                <h4 style="margin-bottom:5px;">Grupo ${letra}</h4>
+                <h4 style="margin-bottom:6px; font-size:13px; color:var(--verde-grama);">Grupo ${letra}</h4>
                 <table style="width:100%; border-collapse: collapse; text-align:left;">
                     <thead>
-                        <tr style="border-bottom: 2px solid #555; font-size:10px; color:#aaa;">
-                            <th>Pos</th><th>Equipo</th><th style="text-align:center;">PJ</th><th style="text-align:center;">Pts</th>
+                        <tr style="border-bottom: 1px solid #444; font-size:9px; color:#888; text-transform:uppercase;">
+                            <th style="padding:2px; text-align:center;">#</th>
+                            <th style="padding:2px;">EQ</th>
+                            <th style="padding:2px; text-align:center;">PJ</th>
+                            <th style="padding:2px; text-align:center;">G</th>
+                            <th style="padding:2px; text-align:center;">E</th>
+                            <th style="padding:2px; text-align:center;">P</th>
+                            <th style="padding:2px; text-align:center;">GF</th>
+                            <th style="padding:2px; text-align:center;">GC</th>
+                            <th style="padding:2px; text-align:center;">DG</th>
+                            <th style="padding:2px; text-align:center;">PTS</th>
                         </tr>
                     </thead>
                     <tbody>${filasTabla}</tbody>
@@ -218,7 +236,7 @@ function cambiarFaseVisualizacion(fase) {
         });
     }
 
-    // PESTAÑA DE PREDICCIONES (DIECISEISAVOS)
+    // PESTAÑA DE CREACIÓN DE QUINIELA (DIECISEISAVOS VERTICALES CON BANDERA)
     if (fase === 'dieciseisavos') {
         Object.keys(llavesDieciseisavos).forEach(idLlave => {
             const [eq1, eq2] = llavesDieciseisavos[idLlave];
@@ -226,35 +244,58 @@ function cambiarFaseVisualizacion(fase) {
             tarjeta.classList.add('tarjeta-grupo');
             tarjeta.style.borderColor = "var(--dorado)";
 
+            // Detectar si la llave está incompleta en la realidad
+            const llaveIncompleta = (eq1 === "Por definir" || eq2 === "Por definir");
+
+            const b1 = banderasPaises[eq1] ? `https://flagcdn.com/${banderasPaises[eq1]}.svg` : "https://cdn-icons-png.flaticon.com/512/2572/2572801.png";
+            const b2 = banderasPaises[eq2] ? `https://flagcdn.com/${banderasPaises[eq2]}.svg` : "https://cdn-icons-png.flaticon.com/512/2572/2572801.png";
+
             if (modalEsEditable && !yaTieneQuiniela) {
-                // Solo se muestran los 2 equipos que se enfrentan
-                let opcionesHTML = `<option value="">-- Elige un ganador --</option>`;
-                opcionesHTML += `<option value="${eq1}">${eq1}</option>`;
-                opcionesHTML += `<option value="${eq2}">${eq2}</option>`;
+                let opcionesHTML = `<option value="">-- Elige quién pasa --</option>`;
+                if (!llaveIncompleta) {
+                    opcionesHTML += `<option value="${eq1}">${eq1}</option>`;
+                    opcionesHTML += `<option value="${eq2}">${eq2}</option>`;
+                }
 
                 tarjeta.innerHTML = `
-                    <h4>Llave ${idLlave}</h4>
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; background:rgba(0,0,0,0.2); padding:5px; border-radius:4px;">
-                        <span style="font-weight:bold; color:white;">${eq1}</span> 
-                        <span style="color:var(--dorado);">VS</span> 
-                        <span style="font-weight:bold; color:white;">${eq2}</span>
+                    <h4 style="color:var(--dorado); font-size:12px; margin-bottom:8px;">Llave ${idLlave}</h4>
+                    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img style="width:20px; height:14px; border-radius:2px; object-fit:cover;" src="${b1}">
+                            <span style="font-size:12px; font-weight:bold; color:${eq1 === 'Por definir' ? '#666' : 'white'}">${eq1}</span>
+                        </div>
+                        <div style="border-top:1px dashed #444; margin:2px 0;"></div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img style="width:20px; height:14px; border-radius:2px; object-fit:cover;" src="${b2}">
+                            <span style="font-size:12px; font-weight:bold; color:${eq2 === 'Por definir' ? '#666' : 'white'}">${eq2}</span>
+                        </div>
                     </div>
-                    <label style="font-size:11px; font-weight:bold; display:block; color:var(--verde-grama);">🏆 ¿Quién avanza a Octavos?:</label>
-                    <select class="selector-clasificado" id="mod-llave-${idLlave}">${opcionesHTML}</select>
+                    <select class="selector-clasificado" id="mod-llave-${idLlave}" ${llaveIncompleta ? 'disabled' : ''} style="width:100%;">
+                        ${llaveIncompleta ? '<option value="">⚠️ Esperando Rivales</option>' : opcionesHTML}
+                    </select>
                 `;
                 grid.appendChild(tarjeta);
 
-                if (datosTarget.dieciseisavos?.[idLlave]) {
-                    document.getElementById(`mod-llave-${idLlave}`).value = datosTarget.dieciseisavos[idLlave] || "";
+                if (datosTarget.dieciseisavos?.[idLlave] && !llaveIncompleta) {
+                    document.getElementById(`mod-llave-${idLlave}`).value = datosTarget.dieciseisavos[idLlave];
                 }
             } else {
                 let ganador = datosTarget.dieciseisavos?.[idLlave] || "No elegido";
-                let flagG = banderasPaises[ganador] ? `<img class="bandera-img" src="https://flagcdn.com/${banderasPaises[ganador]}.svg">` : "";
+                let flagG = banderasPaises[ganador] ? `https://flagcdn.com/${banderasPaises[ganador]}.svg` : "https://cdn-icons-png.flaticon.com/512/2572/2572801.png";
 
                 tarjeta.innerHTML = `
-                    <h4>Llave ${idLlave}</h4>
-                    <p style="font-size:10px; color:#777; margin-bottom:5px; text-align:center;">${eq1} vs ${eq2}</p>
-                    <div class="voto-vista" style="text-align:center; background:#1a1a1a; padding:8px; border-radius:5px;">🚀 Avanza:<br> ${flagG} <b style="color:var(--dorado); font-size:14px;">${ganador}</b></div>
+                    <h4 style="color:#aaa; font-size:12px; margin-bottom:8px;">Llave ${idLlave}</h4>
+                    <div style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#666; margin-bottom:8px;">
+                        <div>• ${eq1}</div>
+                        <div>• ${eq2}</div>
+                    </div>
+                    <div style="text-align:center; background:#111; padding:6px; border-radius:4px; border:1px solid #333;">
+                        <span style="font-size:10px; color:#aaa; display:block; margin-bottom:2px;">Avanza:</span>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                            ${ganador !== "No elegido" ? `<img style="width:16px; height:11px;" src="${flagG}">` : ''}
+                            <b style="color:var(--dorado); font-size:12px;">${ganador}</b>
+                        </div>
+                    </div>
                 `;
                 grid.appendChild(tarjeta);
             }
@@ -271,18 +312,27 @@ function guardarMiQuiniela() {
     let paqueteQuiniela = { dieciseisavos: {} };
     let incompleto = false;
 
-    // Solo verificamos la pestaña activa (Dieciseisavos)
-    Object.keys(llavesDieciseisavos).forEach(idLlave => {
+    // Solo validamos las llaves que YA están definidas en la vida real.
+    // Las que dicen "Por definir" se guardan vacías de forma automática.
+    for (const idLlave in llavesDieciseisavos) {
+        const [eq1, eq2] = llavesDieciseisavos[idLlave];
         const elLlave = document.getElementById(`mod-llave-${idLlave}`);
-        if(elLlave) {
-            const ganador = elLlave.value;
-            if (!ganador) incompleto = true;
-            paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+        
+        if (eq1 !== "Por definir" && eq2 !== "Por definir") {
+            if (elLlave) {
+                const ganador = elLlave.value;
+                if (!ganador) {
+                    incompleto = true;
+                }
+                paqueteQuiniela.dieciseisavos[idLlave] = ganador;
+            }
+        } else {
+            paqueteQuiniela.dieciseisavos[idLlave] = ""; // Se guarda vacío en Supabase de forma segura
         }
-    });
+    }
 
     if (incompleto) {
-        alert("🚨 ¡Epa Peluchón! No puedes dejar casillas vacías. Completa todas las Llaves de Dieciseisavos antes de guardar.");
+        alert("🚨 ¡Epa Peluchón! No puedes dejar casillas vacías en las llaves que ya están jugándose. Completa tus opciones antes de enviar.");
         return;
     }
 
