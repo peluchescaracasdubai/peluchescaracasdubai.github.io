@@ -603,3 +603,10 @@ function controlarMuteMusica() {
         musicaMuted = false;
     }
 }
+// Fuerza la reproducción en el primer clic si el navegador la dejó en pausa
+window.addEventListener('click', function() {
+    const audio = document.getElementById('musica-fondo');
+    if (audio && audio.paused && usuarioLogueado !== "") {
+        audio.play().catch(err => console.log("Esperando interacción..."));
+    }
+}, { once: true }); // Solo se ejecuta una vez para no molestar
