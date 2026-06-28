@@ -472,15 +472,15 @@ button:hover:not(:disabled) {
 /* --- ESTILOS DEL CONTROL FLOTANTE DE AUDIO --- */
 .contenedor-audio-flotante {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
+    top: 20px;          /* Lo baja un poco del borde superior */
+    right: 20px;        /* Lo pega al borde derecho */
     display: flex;
     align-items: center;
     background: rgba(0, 0, 0, 0.75);
     border: 2px solid var(--verde-grama);
     padding: 6px 12px;
     border-radius: 30px;
-    z-index: 9999;
+    z-index: 9999;     /* Mantiene el botón siempre por encima de todo */
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     transition: all 0.3s ease;
 }
